@@ -1,6 +1,10 @@
 #include <gb/gb.h>
 #include "collision.h"
 
+//Tiles que no colisionan
+#define FREE 0x00
+#define LEAVE 0x13
+
 /**
 Contiene los metodos necesarios para, dados un vector de una unica dimension, compobrar si se colisiona
 a partir de una posicion y un tamaño.
@@ -23,7 +27,7 @@ const unsigned char LEVEL1[] =
 }
 */
 
-UINT16 isCollisonDown(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, unsigned char *levelCollision) {
+UINT16 isCollisionDown(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, unsigned char *levelCollision) {
     UINT16 indX; UINT16 indY; UINT16 indXY; UINT16 offsetX; UINT8 i;
     /*
     Si el personaje mide mas de un tile en ancho, se va recorriendo toda su anchura
@@ -49,7 +53,7 @@ UINT16 isCollisonDown(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, u
         indXY = (indY * mapSizeX) + indX;
 
         //Recupero el tile
-        if(levelCollision[indXY] != 0x00) {
+        if(levelCollision[indXY] != FREE && levelCollision[indXY] != LEAVE) {
             return indXY;
         }
     }
@@ -75,7 +79,7 @@ UINT16 isCollisionUp(UINT16 x, UINT16 y, UINT16 w, UINT16 mapSizeX, unsigned cha
         indXY = (indY * mapSizeX) + indX;
 
         //Recupero el tile
-        if(levelCollision[indXY] != 0x00) {
+        if(levelCollision[indXY] != FREE && levelCollision[indXY] != LEAVE) {
             return indXY;
         }
 
@@ -107,7 +111,7 @@ UINT16 isCollisionRight(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX,
         indXY = (indY * mapSizeX) + indX;
 
         //Recupero el tile
-        if(levelCollision[indXY] != 0x00) {
+        if(levelCollision[indXY] != FREE && levelCollision[indXY] != LEAVE) {
             return indXY;
         }
     }
@@ -133,7 +137,7 @@ UINT16 isCollisionLeft(UINT16 x, UINT16 y, UINT16 h, UINT16 mapSizeX, unsigned c
         indXY = (indY * mapSizeX) + indX;
 
         //Recupero el tile
-        if(levelCollision[indXY] != 0x00) {
+        if(levelCollision[indXY] != FREE && levelCollision[indXY] != LEAVE) {
             return indXY;
         }
     }

@@ -1,6 +1,6 @@
 /*
 
- EXPORT.H
+ MAPTILES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 27
+  Tiles                : 0 to 19
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define SPRITE_TILESBank 0
+#define TileLabelBank 0
 /* Start of tile array. */
-extern unsigned char SPRITE_TILES[];
+extern unsigned char TileLabel[];
 
-/* End of EXPORT.H */
+/* End of MAPTILES.H */

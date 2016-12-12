@@ -1,0 +1,1 @@
+#define TOTAL_MAP_TILES 20

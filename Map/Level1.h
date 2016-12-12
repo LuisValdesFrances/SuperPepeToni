@@ -7,8 +7,8 @@
  Info:
    Section       : 
    Bank          : 0
-   Map size      : 64 x 18
-   Tile set      : D:\Projectes GameBoy\Pekoland\Tiles\levelTiles.gbr
+   Map size      : 128 x 18
+   Tile set      : D:\Projectes GameBoy\SuperPepeToni\Tiles\mapTiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
    Tile offset   : 0
@@ -18,10 +18,10 @@
 
 */
 
-#define LEVEL_1Width 64
-#define LEVEL_1Height 18
-#define LEVEL_1Bank 0
+#define Level1Width 128
+#define Level1Height 18
+#define Level1Bank 0
 
-extern unsigned char LEVEL_1[];
+extern unsigned char Level1[];
 
 /* End of LEVEL1.H */
