@@ -13,15 +13,15 @@
 #define INC_BITS <<PRECISION_BITS
 #define DEC_BITS >>PRECISION_BITS
 
-#define GRAVITY 8
+#define GRAVITY 6
 
 //CHARACTERS
 #define MAX_ENEMY_NUMBER 1//Limite esta en 4
 //Payer
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 32
-#define PLAYER_WEIGHT 5
-#define PLAYER_JUMP 3
+#define PLAYER_WEIGHT 3
+#define PLAYER_JUMP 2
 #define PLAYER_SPEED 1
 //Enemy Popo
 #define ENEMY_POPO_WIDTH 8
