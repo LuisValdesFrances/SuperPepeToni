@@ -25,11 +25,17 @@
 #define TILE_PLAYER_RUN_F2_2 23
 #define TILE_PLAYER_RUN_F3_1 24
 #define TILE_PLAYER_RUN_F3_2 25
+#define TILE_PLAYER_ATACK_F1_1 26
+#define TILE_PLAYER_ATACK_F1_2 27
+#define TILE_PLAYER_ATACK_F2_1 28
+#define TILE_PLAYER_ATACK_F2_2 29
+#define TILE_PLAYER_ATACK_F2_3 30
+#define TILE_PLAYER_ATACK_F2_4 31
 
-#define TILE_ENEMY_POPO_IDLE_F1 26
-#define TILE_ENEMY_POPO_IDLE_F2 27
-#define TILE_BLANK 28
-#define TOTAL_TILES 29 //Total + 2
+#define TILE_ENEMY_POPO_IDLE_F1 32
+#define TILE_ENEMY_POPO_IDLE_F2 33
+#define TILE_BLANK 34
+#define TOTAL_TILES 35 //Total + 2
 
 //Sprites (Maximo 39)
 #define SPRITE_DIGIT_1 0
@@ -46,12 +52,14 @@
 #define SPRITE_PLAYER_6 10
 #define SPRITE_PLAYER_7 11
 #define SPRITE_PLAYER_8 12
+#define SPRITE_PLAYER_9 13//Especial atack
+#define SPRITE_PLAYER_10 14//Especial atack
 //Enemy Popo animations
-#define SPRITE_ENEMY_1 13
-#define SPRITE_ENEMY_2 14
-#define SPRITE_ENEMY_3 15
-#define SPRITE_ENEMY_4 16
-#define SPRITE_ENEMY_5 17
-#define SPRITE_ENEMY_6 18
-#define SPRITE_ENEMY_7 19
-#define SPRITE_ENEMY_8 20
+#define SPRITE_ENEMY_1 15
+#define SPRITE_ENEMY_2 16
+#define SPRITE_ENEMY_3 17
+#define SPRITE_ENEMY_4 18
+#define SPRITE_ENEMY_5 19
+#define SPRITE_ENEMY_6 20
+#define SPRITE_ENEMY_7 21
+#define SPRITE_ENEMY_8 22
