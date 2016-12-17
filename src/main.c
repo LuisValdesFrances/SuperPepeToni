@@ -16,7 +16,7 @@
 #define GRAVITY 6
 
 //CHARACTERS
-#define MAX_ENEMIES 2//Limite esta en 4
+#define MAX_ENEMIES 1//Limite esta en 4
 //Payer
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 32
@@ -27,13 +27,13 @@
 #define POPO 0
 #define GOCHI 1
 
-#define ENEMY_POPO_WIDTH 8
-#define ENEMY_POPO_HEIGHT 8
-#define ENEMY_POPO_SPEED 18
+#define POPO_WIDTH 8
+#define POPO_HEIGHT 8
+#define POPO_SPEED 18
 
-#define ENEMY_GOCHI_WIDTH 16
-#define ENEMY_GOCHI_HEIGHT 24
-#define ENEMY_GOCHI_SPEED 12
+#define GOCHI_WIDTH 16
+#define GOCHI_HEIGHT 24
+#define GOCHI_SPEED 12
 
 
 
@@ -180,7 +180,7 @@ void drawNumbers(UINT8 digits, UINT16 number, UINT8 positionX, UINT8 positionY) 
 
 struct Player {
     UINT16 x;
-    UINT16 y;
+    UINT8 y;
     UBYTE flip;
     UINT8 velocityDesc;
     UINT8 velocityAsc;
@@ -190,8 +190,8 @@ struct Player {
 
 struct Enemy {
     UINT16 x;
-    UINT16 y;
-    UBYTE direction;
+    UINT8 y;
+    UBYTE flip;
     UBYTE state;
     UBYTE frame;
     UBYTE type;
@@ -312,6 +312,7 @@ void main() {
     UINT16 temp;
     UINT8 temp2;
     UINT16 count;
+    UINT8 count2;
 
     UINT8 screenCountX;
 
@@ -327,11 +328,16 @@ void main() {
     UBYTE keyA_Down;
 
     UINT16 newX;
-    UINT16 newY;
+    UINT8 newY;
+    UBYTE enemyWidth;
+    UBYTE enemyHeight;
+    UINT8 enemySpeed;
+    UBYTE popoCount;
+    UBYTE gochiCount;
 
 
 
-    char digitPoints[5];
+    //char digitPoints[5];
     struct Enemy enemyList[MAX_ENEMIES];
     struct Player player;
     struct Camera camera;
@@ -339,6 +345,7 @@ void main() {
     temp = 0;
     temp2 = 0;
     count = 0;
+    count2 = 0;
     screenCountX = 0;
 
     keys = 0;
@@ -347,11 +354,11 @@ void main() {
     keyA_Up = TRUE;
     keyA_Down = FALSE;
 
-    digitPoints[0] = 0;
-    digitPoints[1] = 0;
-    digitPoints[2] = 0;
-    digitPoints[3] = 0;
-    digitPoints[4] = 0;
+    //digitPoints[0] = 0;
+    //digitPoints[1] = 0;
+    //digitPoints[2] = 0;
+    //digitPoints[3] = 0;
+    //digitPoints[4] = 0;
 
     DISPLAY_OFF;//Desactiva la pantalla
     disable_interrupts();
@@ -417,21 +424,22 @@ void main() {
 
 
     for(count = 0; count != MAX_ENEMIES; count++){
-        /*
-        enemyList[count].type = POPO;
-        enemyList[count].x = (60 + (count * 60))INC_BITS;
-        enemyList[count].y = (SCREEN_HEIGHT-ENEMY_POPO_HEIGHT-8) INC_BITS;
-        */
+
+        //enemyList[count].type = POPO;
+        //enemyList[count].y = (SCREEN_HEIGHT-POPO_HEIGHT-8);
+
+        enemyList[count].type = GOCHI;
+        enemyList[count].y = (SCREEN_HEIGHT-GOCHI_HEIGHT-8);
+
         enemyList[count].frame = 0;
         enemyList[count].state = STATE_RUN;
-        enemyList[count].direction = FALSE;
-        enemyList[count].type = GOCHI;
-        enemyList[count].x = (60 + (count * 70))INC_BITS;
-        enemyList[count].y = (SCREEN_HEIGHT-ENEMY_GOCHI_HEIGHT-8) INC_BITS;
+        enemyList[count].flip = FALSE;
+        enemyList[count].x = (60 + (count * 60))INC_BITS;
     }
 
     frame = 0;
     while(TRUE) {
+
         /**
         Gestion del game pad
         */
@@ -482,14 +490,14 @@ void main() {
         */
         if(player.velocityAsc > 1 INC_BITS){
             player.velocityDesc = 0;
-            newY -= player.velocityAsc;
+            newY -= (player.velocityAsc DEC_BITS);
             player.velocityAsc -= getGravitySpeed(GRAVITY, PLAYER_WEIGHT);
         }else{
             player.velocityAsc = 0;
             player.velocityDesc += getGravitySpeed(GRAVITY, PLAYER_WEIGHT);
-            newY += player.velocityDesc;
+            newY += (player.velocityDesc DEC_BITS);
         }
-        isInGround = isCollisionDown(player.x DEC_BITS, (player.y + (1 INC_BITS)) DEC_BITS, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
+        isInGround = isCollisionDown(player.x DEC_BITS, player.y + 1, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
 
 
         /**
@@ -537,24 +545,24 @@ void main() {
         /**
         Colisiones player
         */
-        tileIndex = isCollisionDown(player.x DEC_BITS, newY DEC_BITS, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
+        tileIndex = isCollisionDown(player.x DEC_BITS, newY, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
         if(tileIndex!=0){
-            newY = (((tileIndex / MAP_SIZE_X) * 8) - PLAYER_HEIGHT) INC_BITS;
+            newY = (((tileIndex / MAP_SIZE_X) * 8) - PLAYER_HEIGHT);
             player.velocityDesc = 0;
         }
-        tileIndex = isCollisionUp(player.x DEC_BITS, newY DEC_BITS, PLAYER_WIDTH, MAP_SIZE_X, LEVEL1);
+        tileIndex = isCollisionUp(player.x DEC_BITS, newY, PLAYER_WIDTH, MAP_SIZE_X, LEVEL1);
         if(tileIndex!=0){
             player.velocityAsc = 0;//En el FK2 iba de lujo
-            newY = (((tileIndex / MAP_SIZE_X) * 8) + 8) INC_BITS;
+            newY = (((tileIndex / MAP_SIZE_X) * 8) + 8);
             player.velocityAsc = 0;
             player.velocityDesc = 0;
         }
         player.y = newY;
-        tileIndex = isCollisionRight(newX DEC_BITS, player.y DEC_BITS, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
+        tileIndex = isCollisionRight(newX DEC_BITS, player.y, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
         if(tileIndex!=0){
             newX = (((tileIndex % MAP_SIZE_X) * 8)-PLAYER_WIDTH) INC_BITS;
         }
-        tileIndex = isCollisionLeft(newX DEC_BITS, player.y DEC_BITS, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
+        tileIndex = isCollisionLeft(newX DEC_BITS, player.y, PLAYER_HEIGHT, MAP_SIZE_X, LEVEL1);
         if(tileIndex!=0){
             newX = (((tileIndex % MAP_SIZE_X) * 8)+8) INC_BITS;
         }
@@ -569,40 +577,141 @@ void main() {
             player.x = (LEVEL_WIDTH - PLAYER_WIDTH) INC_BITS;
         }
 
+        wait_vbl_done();
+
         /**
         Colisiones enemigos
         */
+
         for(count = 0; count != MAX_ENEMIES; count++){
             if(enemyList[count].state != STATE_UNACTIVE
-               && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), 8) == TRUE){
-                //Intena moverse
-                if(enemyList[count].direction == TRUE){
-                    newX = enemyList[count].x + (ENEMY_POPO_SPEED);
-                }else{
-                    newX = enemyList[count].x - (ENEMY_POPO_SPEED);
+               && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), 16) == TRUE){
+                if(enemyList[count].type == POPO){
+                    enemyWidth = POPO_WIDTH;
+                    enemyHeight = POPO_HEIGHT;
+                    enemySpeed = POPO_SPEED;
                 }
-                tileIndex = isCollisionLeft(newX DEC_BITS, enemyList[count].y DEC_BITS, ENEMY_POPO_HEIGHT, MAP_SIZE_X, LEVEL1);
+                else if(enemyList[count].type == GOCHI){
+                    enemyWidth = GOCHI_WIDTH;
+                    enemyHeight = GOCHI_HEIGHT;
+                    enemySpeed = GOCHI_SPEED;
+                }
+                if(enemyList[count].flip == TRUE){
+                    newX = enemyList[count].x + (enemySpeed);
+                }else{
+                    newX = enemyList[count].x - (enemySpeed);
+                }
+                tileIndex = isCollisionLeft(newX DEC_BITS, enemyList[count].y, enemyHeight, MAP_SIZE_X, LEVEL1);
                 if(tileIndex != 0){
                    newX = (((tileIndex % MAP_SIZE_X) * 8)+8) INC_BITS;
-                   enemyList[count].direction = blink01(enemyList[count].direction);
+                   enemyList[count].flip = blink01(enemyList[count].flip);
                 }
-                tileIndex = isCollisionRight(newX DEC_BITS, enemyList[count].y DEC_BITS, ENEMY_POPO_WIDTH, ENEMY_POPO_HEIGHT, MAP_SIZE_X, LEVEL1);
+                tileIndex = isCollisionRight(newX DEC_BITS, enemyList[count].y, enemyWidth, enemyHeight, MAP_SIZE_X, LEVEL1);
                 if(tileIndex != 0){
-                   newX = (((tileIndex % MAP_SIZE_X) * 8)-ENEMY_POPO_WIDTH) INC_BITS;
-                   enemyList[count].direction = blink01(enemyList[count].direction);
+                   newX = (((tileIndex % MAP_SIZE_X) * 8)-enemyWidth) INC_BITS;
+                   enemyList[count].flip = blink01(enemyList[count].flip);
                 }
+
                 //No hay suelo
-                tileIndex = isCollisionDown(newX DEC_BITS, enemyList[count].y DEC_BITS, ENEMY_POPO_WIDTH, ENEMY_POPO_HEIGHT, MAP_SIZE_X, LEVEL1);
+                tileIndex = isCollisionDown(newX DEC_BITS, enemyList[count].y, enemyWidth, enemyHeight, MAP_SIZE_X, LEVEL1);
                 if(tileIndex !=0){
-                   enemyList[count].direction = blink01(enemyList[count].direction);
+                   enemyList[count].flip = blink01(enemyList[count].flip);
                 }
                 enemyList[count].x = newX;
             }
         }
-
-        wait_vbl_done();
+        popoCount=0;
+        gochiCount=0;
         /**
-        Actualizacion de tiles del player
+        Pintado enemigos
+        */
+        for(count = 0; count != MAX_ENEMIES; count++){
+            if(enemyList[count].state != STATE_UNACTIVE
+               && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), 16) == TRUE){
+                /*
+                if(enemyList[count].type == POPO){
+                    temp = (SPRITE_POPO_1 + (popoCount*1));//1 es el numero de tiles
+
+
+                    set_sprite_tile(SPRITE_POPO_1 + temp, TILE_POPO_F1 + (enemyList[count].frame));
+                    enemyList[count].frame = getFrameIdle(frame, enemyList[count].frame);
+                    if(enemyList[count].flip == TRUE){
+                        set_sprite_prop(SPRITE_POPO_1 + temp, S_FLIPX);
+                    }else{
+                        set_sprite_prop(SPRITE_POPO_1 + temp, 0);
+                    }
+                }
+                */
+                if(enemyList[count].type == GOCHI){
+                    temp = (SPRITE_GOCHI_1 + (gochiCount*6));//6 es el numero de sprites
+
+                    set_sprite_tile(SPRITE_GOCHI_1+temp, TILE_GOCHI_1_F1);
+                    set_sprite_tile(SPRITE_GOCHI_2+temp, TILE_GOCHI_2_F1);
+                    set_sprite_tile(SPRITE_GOCHI_3+temp, TILE_GOCHI_3_F1 + (enemyList[count].frame*4));
+                    set_sprite_tile(SPRITE_GOCHI_4+temp, TILE_GOCHI_4_F1 + (enemyList[count].frame*4));
+                    set_sprite_tile(SPRITE_GOCHI_5+temp, TILE_GOCHI_5_F1 + (enemyList[count].frame*4));
+                    set_sprite_tile(SPRITE_GOCHI_6+temp, TILE_GOCHI_6_F1 + (enemyList[count].frame*4));
+
+                    enemyList[count].frame = getFrameIdleFast(frame, enemyList[count].frame);//OJO
+
+                    for(count2 = 0; count2 != 6; count2++){
+                        if(enemyList[count].flip == TRUE){
+                            set_sprite_prop(SPRITE_GOCHI_1 + count2 + temp, S_FLIPX);
+                        }else{
+                            set_sprite_prop(SPRITE_GOCHI_1 + count2 + temp, 0);
+                        }
+                    }
+                 }
+            }
+            else{
+                if(enemyList[count].type == POPO){
+                    set_sprite_tile(temp, TILE_BLANK);
+                }
+            }
+        }
+
+        /**
+        Pintado enemigos
+        */
+        for(count = 0; count != MAX_ENEMIES; count++){
+            if(enemyList[count].state != STATE_UNACTIVE
+               && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), 16) == TRUE){
+                /*
+                if(enemyList[count].type == POPO){
+                    temp = (SPRITE_POPO_1 + (popoCount*1));//1 es el numero de tiles
+                    move_sprite(SPRITE_POPO_1 + temp,
+                        (enemyList[count].x DEC_BITS) - camera.scroll +8,
+                        (enemyList[count].y) +16);
+                    popoCount++;
+                }
+                */
+                if(enemyList[count].type == GOCHI){
+                    temp = (SPRITE_GOCHI_1 + (gochiCount*6));//6 es el numero de sprites
+                    if(enemyList[count].flip == TRUE){
+                        temp2 = 8;
+                    }else{
+                        temp2 = 0;
+                    }
+                    move_sprite(SPRITE_GOCHI_1+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8 + temp2, (enemyList[count].y) +16);
+                    move_sprite(SPRITE_GOCHI_2+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16 - temp2, (enemyList[count].y) +16);
+                    move_sprite(SPRITE_GOCHI_3+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8 + temp2, (enemyList[count].y) +24);
+                    move_sprite(SPRITE_GOCHI_4+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16 - temp2, (enemyList[count].y) +24);
+                    move_sprite(SPRITE_GOCHI_5+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8 + temp2, (enemyList[count].y) +32);
+                    move_sprite(SPRITE_GOCHI_6+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16 - temp2, (enemyList[count].y) +32);
+                    gochiCount++;
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+        /**
+        Pintado Player
         */
         //Movimiento de los sprites //ANCHOR-> abajo derecha
         if(player.flip == TRUE){
@@ -634,14 +743,14 @@ void main() {
         set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);//Especial(Sobreesale)
 
         //Coloco los sprites en su posicion
-        move_sprite(SPRITE_PLAYER_1, (player.x DEC_BITS) - camera.scroll+8+temp, (player.y DEC_BITS)+16+temp2);
-        move_sprite(SPRITE_PLAYER_2, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+16+temp2);
-        move_sprite(SPRITE_PLAYER_3, (player.x DEC_BITS) - camera.scroll+8+temp, (player.y DEC_BITS)+24+temp2);
-        move_sprite(SPRITE_PLAYER_4, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+24+temp2);
-        move_sprite(SPRITE_PLAYER_5, (player.x DEC_BITS) - camera.scroll+8+temp, (player.y DEC_BITS)+32+temp2);
-        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+32+temp2);
-        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll+8+temp, (player.y DEC_BITS)+40);
-        move_sprite(SPRITE_PLAYER_8, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+40);
+        move_sprite(SPRITE_PLAYER_1, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +16 +temp2);
+        move_sprite(SPRITE_PLAYER_2, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +16 +temp2);
+        move_sprite(SPRITE_PLAYER_3, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +24 +temp2);
+        move_sprite(SPRITE_PLAYER_4, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +24 +temp2);
+        move_sprite(SPRITE_PLAYER_5, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +32 +temp2);
+        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +32 +temp2);
+        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +40);
+        move_sprite(SPRITE_PLAYER_8, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +40);
 
         if(isInGround == FALSE){
             //Piernas
@@ -667,8 +776,8 @@ void main() {
                         set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
                         set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
 
-                        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+32);//ESPECIAL
-                        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll+8+temp, (player.y DEC_BITS)+40);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +32);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +40);//ESPECIAL
 
                         player.frame++;
 
@@ -683,9 +792,9 @@ void main() {
                         //Piernas
                         set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
 
-                        move_sprite(SPRITE_PLAYER_9, (player.x DEC_BITS) - camera.scroll+24-(temp*3), (player.y DEC_BITS)+24);//ESPECIAL
-                        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+32);//ESPECIAL
-                        move_sprite(SPRITE_PLAYER_10, (player.x DEC_BITS) - camera.scroll+24-(temp*3), (player.y DEC_BITS)+32);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_9, (player.x DEC_BITS) - camera.scroll+24-(temp*3), player.y +24);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, player.y +32);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_10, (player.x DEC_BITS) - camera.scroll+24-(temp*3), player.y +32);//ESPECIAL
 
                         player.frame++;
                 }else if(player.frame < 12){
@@ -694,8 +803,8 @@ void main() {
                         //Piernas
                         set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
 
-                        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, (player.y DEC_BITS)+32);//ESPECIAL
-                        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll+8+temp, (player.y DEC_BITS)+40);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, player.y +32);//ESPECIAL
+                        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll+8+temp, player.y +40);//ESPECIAL
 
                         player.frame++;
                 }else{
@@ -704,120 +813,6 @@ void main() {
                 }
             }
         }
-
-        /**
-        Actualizacion de tiles de los enemigos
-        */
-
-
-        //for(count = 0; count != MAX_ENEMIES; count++)
-        {
-            count = 0;
-            /*
-            if(enemyList[count].type == POPO){
-                temp = (SPRITE_ENEMY_POPO_1 + (count*1));//1 es el numero de tiles
-                if(enemyList[count].state == STATE_RUN
-                   && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), ENEMY_POPO_WIDTH) == TRUE){
-
-
-                    set_sprite_tile(SPRITE_ENEMY_POPO_1 + temp, TILE_ENEMY_POPO_F1 + (enemyList[count].frame));
-                    enemyList[count].frame = getFrameIdle(frame, enemyList[count].frame);
-
-                    move_sprite(SPRITE_ENEMY_POPO_1 + temp,
-                        (enemyList[count].x DEC_BITS) - camera.scroll +8,
-                        (enemyList[count].y DEC_BITS) +16);
-
-                    if(enemyList[count].direction == 0){
-                        set_sprite_prop(SPRITE_ENEMY_POPO_1 + temp, S_FLIPX);
-                    }else{
-                        set_sprite_prop(SPRITE_ENEMY_POPO_1 + temp, 0);
-                    }
-                }
-                else{
-                    set_sprite_tile(temp, TILE_BLANK);
-                }
-            }
-            else
-            */
-            if(enemyList[count].type == GOCHI){
-
-                temp = (SPRITE_ENEMY_GOCHI_1 + (count*6));//6 es el numero de sprites
-                if(enemyList[count].state == STATE_RUN
-                   && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), ENEMY_GOCHI_WIDTH) == TRUE){
-
-
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_1+temp, TILE_ENEMY_GOCHI_1_F1);
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_2+temp, TILE_ENEMY_GOCHI_2_F1);
-                    temp2 = enemyList[count].frame;
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_3+temp, TILE_ENEMY_GOCHI_3_F1 + (temp2*4));
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_4+temp, TILE_ENEMY_GOCHI_4_F1 + (temp2*4));
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_5+temp, TILE_ENEMY_GOCHI_5_F1 + (temp2*4));
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_6+temp, TILE_ENEMY_GOCHI_6_F1 + (temp2*4));
-
-                    enemyList[count].frame = getFrameIdleFast(frame, enemyList[count].frame);//OJO
-
-                    move_sprite(SPRITE_ENEMY_GOCHI_1+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8, (enemyList[count].y DEC_BITS) +16);
-                    move_sprite(SPRITE_ENEMY_GOCHI_2+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16, (enemyList[count].y DEC_BITS) +16);
-                    move_sprite(SPRITE_ENEMY_GOCHI_3+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8, (enemyList[count].y DEC_BITS) +24);
-                    move_sprite(SPRITE_ENEMY_GOCHI_4+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16, (enemyList[count].y DEC_BITS) +24);
-                    move_sprite(SPRITE_ENEMY_GOCHI_5+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8, (enemyList[count].y DEC_BITS) +32);
-                    move_sprite(SPRITE_ENEMY_GOCHI_6+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16, (enemyList[count].y DEC_BITS) +32);
-
-
-                    /*
-                    if(enemyList[count].direction == 0){
-                        set_sprite_prop(SPRITE_ENEMY_1 + count, S_FLIPX);
-                    }else{
-                        set_sprite_prop(SPRITE_ENEMY_1 + count, 0);
-                    }
-                    */
-                }
-                else{
-                    set_sprite_tile(temp, TILE_BLANK);
-                }
-
-
-                count = 1;
-                temp = (SPRITE_ENEMY_GOCHI_1 + (count*6));//6 es el numero de sprites
-                if(enemyList[count].state == STATE_RUN
-                   && isInScreen(camera.scroll, (enemyList[count].x DEC_BITS), ENEMY_GOCHI_WIDTH) == TRUE){
-
-
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_1+temp, TILE_ENEMY_GOCHI_1_F1);
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_2+temp, TILE_ENEMY_GOCHI_2_F1);
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_5+temp, TILE_ENEMY_GOCHI_5_F1);
-                    temp2 = enemyList[count].frame;
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_3+temp, TILE_ENEMY_GOCHI_3_F1 + (temp2*4));
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_4+temp, TILE_ENEMY_GOCHI_4_F1 + (temp2*4));
-                    set_sprite_tile(SPRITE_ENEMY_GOCHI_6+temp, TILE_ENEMY_GOCHI_6_F1 + (temp2*3));
-
-                    enemyList[count].frame = getFrameIdleFast(frame, enemyList[count].frame);//OJO
-
-                    move_sprite(SPRITE_ENEMY_GOCHI_1+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8, (enemyList[count].y DEC_BITS) +16);
-                    move_sprite(SPRITE_ENEMY_GOCHI_2+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16, (enemyList[count].y DEC_BITS) +16);
-                    move_sprite(SPRITE_ENEMY_GOCHI_3+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8, (enemyList[count].y DEC_BITS) +24);
-                    move_sprite(SPRITE_ENEMY_GOCHI_4+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16, (enemyList[count].y DEC_BITS) +24);
-                    move_sprite(SPRITE_ENEMY_GOCHI_5+temp,(enemyList[count].x DEC_BITS) - camera.scroll +8, (enemyList[count].y DEC_BITS) +32);
-                    move_sprite(SPRITE_ENEMY_GOCHI_6+temp,(enemyList[count].x DEC_BITS) - camera.scroll +16, (enemyList[count].y DEC_BITS) +32);
-
-
-                    /*
-                    if(enemyList[count].direction == 0){
-                        set_sprite_prop(SPRITE_ENEMY_1 + count, S_FLIPX);
-                    }else{
-                        set_sprite_prop(SPRITE_ENEMY_1 + count, 0);
-                    }
-                    */
-                }
-                else{
-                    set_sprite_tile(temp, TILE_BLANK);
-                }
-
-            }
-        }
-
-
-
 
         //Actualizo los valores de la camara
         camera.lastX = camera.scroll;
@@ -855,18 +850,18 @@ void main() {
                 temp = temp + MAP_SIZE_X;
             }
         }
+
         else if(screenCountX == -8){
             screenCountX = 0;
-            /**
-            Como el tile que queremos rellenar de mas a la izquierda se encuentra fuera de la pantalla
-            resto -1
-            */
+
+            //Como el tile que queremos rellenar de mas a la izquierda se encuentra fuera de la pantalla resto -1
+
             temp = (camera.scroll>>3)-1;
-            /**
-            El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
-            (Le sigue el 0, no el 33)
-            Es elmotivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
-            */
+
+            //El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
+            //(Le sigue el 0, no el 33)
+            //Es elmotivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
+
             temp2 = temp % 32;
             //18 son los tiles que entran en la pantalla en alto
             for(count = 0; count != 18; count++ ){
@@ -885,7 +880,8 @@ void main() {
 
 
 
-        //temp = isInScreen(camera.scroll, (enemyList[0].x DEC_BITS), ENEMY_POPO_WIDTH);
+
+        //temp = isInScreen(camera.scroll, (enemyList[0].x DEC_BITS), POPO_WIDTH);
         //drawPoints(enemyList[1].frame, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
 
     frame++;
