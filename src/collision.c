@@ -27,8 +27,11 @@ const unsigned char LEVEL1[] =
 }
 */
 
+/**
+Retorna el tile index(X,Y) que colisona por abajo
+*/
 UINT16 isCollisionDown(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, unsigned char *levelCollision) {
-    UINT16 indX; UINT16 indY; UINT16 indXY; UINT16 offsetX; UINT8 i;
+    UINT16 indX; UINT8 indY; UINT16 indXY; UINT8 offsetX; UINT8 i;
     /*
     Si el personaje mide mas de un tile en ancho, se va recorriendo toda su anchura
     (de 8 en 8-> desplazar 3 bits hacia la izquierda equivale a dividir entre 8)
@@ -60,8 +63,11 @@ UINT16 isCollisionDown(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, 
     return 0;
 }
 
+/**
+Retorna el tile index(X,Y) que colisona por arriba
+*/
 UINT16 isCollisionUp(UINT16 x, UINT16 y, UINT16 w, UINT16 mapSizeX, unsigned char *levelCollision) {
-    UINT16 indX;UINT16 indY;UINT16 indXY;UINT16 offsetX;UINT8 i;
+    UINT16 indX; UINT8 indY; UINT16 indXY; UINT8 offsetX; UINT8 i;
     i = 0;
     //for(i = 0; i < (w>>3); i++)
     while(i < (w>>3)+1)
@@ -87,8 +93,11 @@ UINT16 isCollisionUp(UINT16 x, UINT16 y, UINT16 w, UINT16 mapSizeX, unsigned cha
     return 0;
 }
 
+/**
+Retorna el tile index(X,Y) que colisona por la derecha
+*/
 UINT16 isCollisionRight(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, unsigned char *levelCollision) {
-    UINT16 indX;UINT16 indY;UINT16 indXY;UINT16 offsetY;UINT8 i;
+    UINT16 indX; UINT8 indY; UINT16 indXY; UINT8 offsetY; UINT8 i;
 
     /*
     Si el personaje mide mas de un tile en alto, se va recorriendo toda su altura
@@ -118,8 +127,11 @@ UINT16 isCollisionRight(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX,
     return 0;
 }
 
+/**
+Retorna el tile index(X,Y) que colisona por la izquierda
+*/
 UINT16 isCollisionLeft(UINT16 x, UINT16 y, UINT16 h, UINT16 mapSizeX, unsigned char *levelCollision) {
-    UINT16 indX; UINT16 indY; UINT16 indXY; UINT16 offsetY; UINT8 i;
+    UINT16 indX; UINT8 indY; UINT16 indXY; UINT8 offsetY; UINT8 i;
 
     i = 0;
     //for(i = 0; i < (h>>3); i++)
