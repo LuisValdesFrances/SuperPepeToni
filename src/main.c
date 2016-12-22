@@ -5,6 +5,7 @@
 #include "spriteTiles.h"
 #include "mapTiles.h"
 #include "collision.h"
+#include "enemyPosition.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -68,6 +69,10 @@ extern const unsigned char FONT_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char MAP_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char SPRITE_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char LEVEL1[];//Colisiones y distribucion
+extern unsigned UBYTE gochiLevel_1_X[];//Posiciones de los malos
+extern unsigned UBYTE gochiLevel_1_Y[];//Posiciones de los malos
+extern unsigned UBYTE popoLevel_1_X[];//Posiciones de los malos
+extern unsigned UBYTE popoLevel_1_Y[];//Posiciones de los malos
 
 
 UBYTE keyPressUP(UBYTE key) {
@@ -330,7 +335,7 @@ void checkPlayerDamage(struct Camera *camera, struct Player *player, struct Enem
 }
 
 void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH){
-    UBYTE temp;
+    UINT16 temp;
     if(isInScreen((*camera).scroll, ((*enemy).x DEC_BITS), enemyW)){
         if((*enemy).expCount == 0){
             if((*player).frame > 3 && (*player).frame < 9){
@@ -369,10 +374,17 @@ void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE e
                 (*enemy).flip = blink01((*enemy).flip);
             }
             //No hay suelo
+            /*
             if(isCollisionDown(newX DEC_BITS, (*enemy).y, enemyW, enemyH, MAP_SIZE_X, level)){
                 (*enemy).flip = blink01((*enemy).flip);
             }
+            */
             (*enemy).x = newX;
+        }
+    }else{
+        //Si se ha quedado a la izquierda fuera del scroll, lo desactivo
+        if(((*enemy).x DEC_BITS) + enemyW < (*camera).scroll){
+            (*enemy).expCount = 4;
         }
     }
 }
@@ -467,6 +479,47 @@ void moveSpritePopo(struct Camera *camera, struct Enemy *popo, UBYTE count){
     }
 }
 
+void showEnemy(
+               struct Camera *camera,
+               struct Enemy *enemyList[],
+               UBYTE maxEnemy,
+               UBYTE *listX,
+               UBYTE *listY,
+               UBYTE size,
+               UBYTE enemyWidth){
+    UBYTE i;
+    UBYTE j;
+    UINT16 posX;
+    UBYTE posY;
+    struct Enemy *e;
+
+    for(i = 0; i < size; i++){
+        posX = listX[i];
+        posY = listY[i];
+        posX = posX<<3;
+        posY = posY<<3;
+
+        if(listX[i] != 0 && (*camera).scroll + SCREEN_WIDTH + enemyWidth >= posX){
+            //Saco bicho
+            for(j = 0; j < maxEnemy; j++){
+                //Accedo a un puntero que apunta a un vector de structs
+                e = &enemyList[j];
+
+                if(e->expCount == 4){
+                    e->x = posX INC_BITS;
+                    e->y = posY;
+                    e->frame = 0;
+                    e->flip = FALSE;
+                    e->expCount = 0;
+
+                    listX[i] = 0;
+                    j = maxEnemy;
+                }
+            }
+        }
+    }
+}
+
 void main() {
 
     //Mierda temporal
@@ -478,7 +531,6 @@ void main() {
     UINT16 temp;
     UBYTE temp2;
     UBYTE count;
-    UBYTE count2;
 
     UBYTE screenCountX;
 
@@ -582,22 +634,17 @@ void main() {
 
     count = MAX_GOCHI-1;
     do{
-        gochiList[count].y = (SCREEN_HEIGHT-GOCHI_HEIGHT-8);
-        gochiList[count].frame = 0;
-        gochiList[count].flip = FALSE;
-        gochiList[count].x = 20 + (count * 40);
-        gochiList[count].x = gochiList[count].x INC_BITS;
-        gochiList[count].expCount = 0;
-    }while(count--);
+        gochiList[count].expCount = 4;
+    }
+    while(count--);
     count = MAX_POPO-1;
     do{
-        popoList[count].y = (SCREEN_HEIGHT-POPO_HEIGHT-8);
-        popoList[count].frame = 0;
-        popoList[count].flip = FALSE;
-        popoList[count].x = 30 + (count * 20);
-        popoList[count].x = popoList[count].x INC_BITS;
-        popoList[count].expCount = 0;
-    }while(count--);
+        popoList[count].expCount = 4;
+
+    }
+    while(count--);
+    showEnemy(&camera, &gochiList, MAX_GOCHI, &gochiLevel_1_X, &gochiLevel_1_Y, NUMBER_GOCHI_LEVEL_1, GOCHI_WIDTH);
+    showEnemy(&camera, &popoList, MAX_POPO, &popoLevel_1_X, &popoLevel_1_Y, NUMBER_POPO_LEVEL_1, POPO_WIDTH);
 
 
     while(TRUE) {
@@ -734,8 +781,6 @@ void main() {
         else if((player.x DEC_BITS) + PLAYER_WIDTH >= LEVEL_WIDTH){
             player.x = (LEVEL_WIDTH - PLAYER_WIDTH) INC_BITS;
         }
-
-
 
         /**
         Colisiones enemigos
@@ -894,6 +939,8 @@ void main() {
         //Al avanzar un tile se actualiza el mapa
         if(screenCountX == 8){
         //if(screenCountX & 8){//Ocupa menos
+            showEnemy(&camera, &gochiList, MAX_GOCHI, &gochiLevel_1_X, &gochiLevel_1_Y, NUMBER_GOCHI_LEVEL_1, GOCHI_WIDTH);
+            showEnemy(&camera, &popoList, MAX_POPO, &popoLevel_1_X, &popoLevel_1_Y, NUMBER_POPO_LEVEL_1, POPO_WIDTH);
             screenCountX = 0;
 
             /**
@@ -960,7 +1007,7 @@ void main() {
 
 
 
-    //drawPoints(gochiList[0].x, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+    //drawPoints((gochiList[1].x >> 3) DEC_BITS, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
 
     frame++;
 

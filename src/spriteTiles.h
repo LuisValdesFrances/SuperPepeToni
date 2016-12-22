@@ -1,3 +1,6 @@
+#ifndef SPRITETILES_H_INCLUDED
+#define SPRITETILES_H_INCLUDED
+
 #define TILE_0 0
 #define TILE_1 1
 #define TILE_2 2
