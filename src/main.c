@@ -4,6 +4,7 @@
 #include "font.h"
 #include "spriteTiles.h"
 #include "mapTiles.h"
+#include "keys.h"
 #include "collision.h"
 #include "enemyPosition.h"
 
@@ -21,6 +22,7 @@
 #define MAX_GOCHI 2
 #define MAX_POPO 1
 #define MAX_BABIT 1
+#define MAX_BULLET 3
 //Payer
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 32
@@ -41,6 +43,10 @@
 
 #define BABIT_WIDTH 24
 #define BABIT_HEIGHT 32
+
+#define BULLET_WIDTH 8
+#define BULLET_HEIGHT 8
+#define BULLET_SPEED 40
 
 
 
@@ -79,65 +85,6 @@ extern unsigned UBYTE popoLevel_1_X[];//Posiciones de los malos
 extern unsigned UBYTE popoLevel_1_Y[];//Posiciones de los malos
 extern unsigned UBYTE babitLevel_1_X[];//Posiciones de los malos
 extern unsigned UBYTE babitLevel_1_Y[];//Posiciones de los malos
-
-
-UBYTE keyPressUP(UBYTE key) {
-    if( key & (J_UP)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressDOWN(UBYTE key) {
-    if( key & (J_DOWN)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressLEFT(UBYTE key) {
-    if( key & (J_LEFT)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressRIGHT(UBYTE key) {
-    if( key & (J_RIGHT)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressA(UBYTE key) {
-    if( key & (J_A)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressB(UBYTE key) {
-    if( key & (J_B)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressSTART(UBYTE key) {
-    if( key & (J_START)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-UBYTE keyPressSELECT(UBYTE key) {
-
-    if( key & (J_SELECT)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
 
 
 UINT8 getNumberDigits(UINT16 number, UINT8 c) {
@@ -210,13 +157,19 @@ struct Enemy {
     UBYTE expCount;
 };
 
+struct Bullet {
+    UINT16 x;
+    UBYTE y;
+    UBYTE active;
+};
+
 struct Camera {
     UINT16 scroll;
     UINT16 lastX;
 };
 
 UBYTE blink01(UBYTE value){
-    if(value == FALSE){
+    if(!value){
         return TRUE;
     }else{
         return FALSE;
@@ -313,19 +266,19 @@ UINT8 getStrongJump(UINT16 strongJump){
     return (8 * strongJump) / PRECISION_BITS;
 }
 
-void checkPlayerDamage(struct Camera *camera, struct Player *player, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH){
-    if(isInScreen((*camera).scroll, ((*enemy).x DEC_BITS), enemyW)){
-        if((*enemy).expCount == 0){
-            if((*player).suffCount == 0
+//Quitar el plater de aqui y pasar su posicion por parametro
+UBYTE checkPlayerDamage(struct Camera *camera, struct Player *player, UINT16 enemyX, UBYTE enemyY, UBYTE enemyW, UBYTE enemyH){
+    if(isInScreen((*camera).scroll, (enemyX DEC_BITS), enemyW)){
+        if((*player).suffCount == 0
             &&
             checkCollision(
                 ((*player).x DEC_BITS), (*player).y, PLAYER_WIDTH, PLAYER_HEIGHT,
-                ((*enemy).x DEC_BITS), (*enemy).y, enemyW, enemyH)){
-
+                (enemyX DEC_BITS), enemyY, enemyW, enemyH)){
                 (*player).suffCount = SUFF_COUNT;
-            }
-         }
+        return TRUE;
+        }
     }
+    return FALSE;
 }
 
 void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH){
@@ -352,8 +305,8 @@ void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy
 
 void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH, UBYTE speed, unsigned char *level){
     UINT16 newX;
-    if(isInScreen((*camera).scroll, ((*enemy).x DEC_BITS), enemyW)){
-        if((*enemy).expCount == 0){
+    if((*enemy).expCount == 0){
+        if(isInScreen((*camera).scroll, ((*enemy).x DEC_BITS), enemyW)){
             if((*enemy).flip){
                 newX = (*enemy).x + speed;
             }else{
@@ -374,11 +327,27 @@ void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE e
             }
 
             (*enemy).x = newX;
+        }else{
+            //Si se ha quedado a la izquierda fuera del scroll, lo desactivo
+            if(((*enemy).x DEC_BITS) + enemyW < (*camera).scroll){
+                (*enemy).expCount = 4;
+            }
         }
-    }else{
-        //Si se ha quedado a la izquierda fuera del scroll, lo desactivo
-        if(((*enemy).x DEC_BITS) + enemyW < (*camera).scroll){
-            (*enemy).expCount = 4;
+    }
+}
+
+void moveBullet(struct Camera *camera, struct Bullet *bullet, UBYTE bulletW, UBYTE speed, unsigned char *level){
+    UINT16 newX;
+    newX = (*bullet).x - speed;
+    if((*bullet).active){
+        if(isInScreen((*camera).scroll, ((*bullet).x DEC_BITS), bulletW)){
+            if(isCollisionLeft(newX DEC_BITS, (*bullet).y, bulletW, MAP_SIZE_X, level)){
+                (*bullet).active = FALSE;
+            }else{
+                (*bullet).x = newX;
+            }
+        }else{
+             (*bullet).active = FALSE;
         }
     }
 }
@@ -473,7 +442,42 @@ void moveSpritePopo(struct Camera *camera, struct Enemy *popo, UBYTE count){
     }
 }
 
-void drawBabit(struct Camera *camera, struct Enemy *babit, UBYTE count, UBYTE frame){
+void drawBullet(struct Bullet *bullet, UBYTE count){
+    UBYTE temp;
+    temp = count*1;//1 es el numero de tiles
+    if((*bullet).active){
+        set_sprite_tile(SPRITE_BULLET + temp, TILE_BULLET);
+    }else{
+        set_sprite_tile(SPRITE_BULLET + temp, TILE_BLANK);
+    }
+}
+
+void moveSpriteBullet(struct Camera *camera, struct Bullet *bullet, UBYTE count){
+    UBYTE temp;
+    temp = count*1;//1 es el numero de tiles
+    if(isInScreen((*camera).scroll, ((*bullet).x DEC_BITS), BULLET_WIDTH) && (*bullet).active){
+        move_sprite(SPRITE_BULLET + temp,((*bullet).x DEC_BITS) - (*camera).scroll +8, ((*bullet).y) +16);
+    }
+}
+
+void showBullet(struct Bullet *bulletList[], UBYTE maxBullet, UINT16 posX, UBYTE posY){
+    UBYTE i;
+    struct Bullet *b;
+
+    for(i = 0; i < maxBullet; i++){
+        //Accedo a un puntero que apunta a un vector de structs
+        b = &bulletList[i];
+
+        if(!b->active){
+            b->active = TRUE;
+            b->x = posX;
+            b->y = posY;
+            i = maxBullet;
+        }
+    }
+}
+
+void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bulletList[], UBYTE maxBullet, UBYTE count, UBYTE frame){
 
     UBYTE temp;
     UBYTE count2;
@@ -490,13 +494,19 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, UBYTE count, UBYTE fr
             set_sprite_tile(SPRITE_ENEMY_24X32_10+temp, TILE_BABIT_10_F1);
             set_sprite_tile(SPRITE_ENEMY_24X32_11+temp, TILE_BABIT_11_F1);
 
-            (*babit).frame = getFrameIdle(frame, (*babit).frame, 40);//OJO
-            if((*babit).frame){
-                set_sprite_tile(SPRITE_ENEMY_24X32_3+temp, TILE_BABIT_3_F1);//especial
-                set_sprite_tile(SPRITE_ENEMY_24X32_6+temp, TILE_BABIT_6_F1);//especial
-            }else{
+            (*babit).frame = (*babit).frame+1;
+
+            if((*babit).frame < 40){
                 set_sprite_tile(SPRITE_ENEMY_24X32_3+temp, TILE_BABIT_1_F2);//especial
                 set_sprite_tile(SPRITE_ENEMY_24X32_6+temp, TILE_BABIT_2_F2);//especial
+            }else{
+                set_sprite_tile(SPRITE_ENEMY_24X32_3+temp, TILE_BABIT_3_F1);//especial
+                set_sprite_tile(SPRITE_ENEMY_24X32_6+temp, TILE_BABIT_6_F1);//especial
+                if((*babit).frame == 50){
+                   (*babit).frame = 0;
+                    //Disparo
+                    showBullet(bulletList, maxBullet, (*babit).x - (7 INC_BITS), (*babit).y + 6);
+                }
             }
 
         }else{
@@ -627,6 +637,7 @@ void main() {
     struct Enemy gochiList[MAX_GOCHI];
     struct Enemy popoList[MAX_POPO];
     struct Enemy babitList[MAX_BABIT];
+    struct Bullet bulletList[MAX_BULLET];
     struct Player player;
     struct Camera camera;
 
@@ -733,6 +744,11 @@ void main() {
     count = MAX_BABIT-1;
     do{
         babitList[count].expCount = 4;
+    }
+    while(count--);
+    count = MAX_BULLET-1;
+    do{
+        bulletList[count].active = FALSE;
     }
     while(count--);
 
@@ -883,21 +899,37 @@ void main() {
         count = MAX_GOCHI-1;
         do{
             moveEnemy(&camera, &gochiList[count], GOCHI_WIDTH, GOCHI_HEIGHT, GOCHI_SPEED, map);
-            checkPlayerDamage(&camera, &player, &gochiList[count], GOCHI_WIDTH, GOCHI_HEIGHT);
             checkEnemyDamage(&camera, &player, &gochiList[count], GOCHI_WIDTH, GOCHI_HEIGHT);
+            if(gochiList[count].expCount == 0){
+                checkPlayerDamage(&camera, &player, gochiList[count].x, gochiList[count].y, GOCHI_WIDTH, GOCHI_HEIGHT);
+            }
         }while(count--);
         //Popo
         count = MAX_POPO-1;
         do{
             moveEnemy(&camera, &popoList[count], POPO_WIDTH, POPO_HEIGHT, POPO_SPEED, map);
-            checkPlayerDamage(&camera, &player, &popoList[count], POPO_WIDTH, POPO_HEIGHT);
+            if(popoList[count].expCount == 0){
+                checkPlayerDamage(&camera, &player, popoList[count].x, popoList[count].y, POPO_WIDTH, POPO_HEIGHT);
+            }
         }while(count--);
         //Babit
         count = MAX_POPO-1;
         do{
             moveEnemy(&camera, &babitList[count], BABIT_WIDTH, BABIT_HEIGHT, 0, map);
-            checkPlayerDamage(&camera, &player, &babitList[count], BABIT_WIDTH, BABIT_HEIGHT);
             checkEnemyDamage(&camera, &player, &babitList[count], BABIT_WIDTH, BABIT_HEIGHT);
+            if(babitList[count].expCount == 0){
+                checkPlayerDamage(&camera, &player, babitList[count].x, babitList[count].y, BABIT_WIDTH, BABIT_HEIGHT);
+            }
+        }while(count--);
+        //Bullet
+        count = MAX_BULLET-1;
+        do{
+            moveBullet(&camera, &bulletList[count], BULLET_WIDTH, BULLET_SPEED, map);
+            if(bulletList[count].active){
+                if(checkPlayerDamage(&camera, &player, bulletList[count].x, bulletList[count].y, BULLET_WIDTH, BULLET_HEIGHT)){
+                    bulletList[count].active = FALSE;
+                }
+            }
         }while(count--);
 
 
@@ -911,17 +943,20 @@ void main() {
             drawGochi(&camera, &gochiList[count], count, frame);
             moveSpriteGochi(&camera, &gochiList[count], count);
         }
-
         //Popo
         for(count = 0; count < MAX_POPO; count++){
             drawPopo(&camera, &popoList[count], count, frame);
             moveSpritePopo(&camera, &popoList[count], count);
         }
-
         //Babit
         for(count = 0; count < MAX_BABIT; count++){
-            drawBabit(&camera, &babitList[count], count, frame);
+            drawBabit(&camera, &babitList[count], &bulletList, MAX_BULLET, count, frame);
             moveSpriteBabit(&camera, &babitList[count], count);
+        }
+        //Bullet
+        for(count = 0; count < MAX_BULLET; count++){
+            drawBullet(&bulletList[count], count, frame);
+            moveSpriteBullet(&camera, &bulletList[count], count);
         }
 
         /**
