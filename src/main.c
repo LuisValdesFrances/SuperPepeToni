@@ -1,79 +1,16 @@
 #include <stdio.h>
 #include <gb/gb.h>
 #include <gb/drawing.h>
+#include "constans.h"
 #include "font.h"
 #include "spriteTiles.h"
 #include "mapTiles.h"
 #include "keys.h"
 #include "collision.h"
 #include "enemyPosition.h"
-
-#define TRUE 1
-#define FALSE 0
-
-#define PRECISION_BITS 4
-#define INC_BITS <<PRECISION_BITS
-#define DEC_BITS >>PRECISION_BITS
-
-#define GRAVITY 6
-
-//CHARACTERS
-//Por motivos de optimizacion, nunca puede ser 0
-#define MAX_GOCHI 2
-#define MAX_POPO 1
-#define MAX_BABIT 1
-#define MAX_BULLET 3
-//Payer
-#define PLAYER_WIDTH 16
-#define PLAYER_HEIGHT 32
-#define PLAYER_WEIGHT 3
-#define PLAYER_JUMP 2
-#define PLAYER_SPEED 1 INC_BITS
-//Enemies
-#define POPO 0
-#define GOCHI 1
-
-#define POPO_WIDTH 8
-#define POPO_HEIGHT 8
-#define POPO_SPEED 18
-
-#define GOCHI_WIDTH 16
-#define GOCHI_HEIGHT 24
-#define GOCHI_SPEED 12
-
-#define BABIT_WIDTH 24
-#define BABIT_HEIGHT 32
-
-#define BULLET_WIDTH 8
-#define BULLET_HEIGHT 8
-#define BULLET_SPEED 40
+#include "utils.h"
 
 
-
-#define SCREEN_WIDTH 160
-#define SCREEN_HEIGHT 144
-#define SCREEN_WIDTH2 (SCREEN_WIDTH >> 1)
-#define SCREEN_HEIGHT2 (SCREEN_HEIGHT >> 1)
-#define SCREEN_WIDTH4 (SCREEN_WIDTH >> 2)
-#define SCREEN_HEIGHT4 (SCREEN_HEIGHT >> 2)
-#define SCREEN_WIDTH8 (SCREEN_WIDTH >> 3)
-#define SCREEN_HEIGHT8 (SCREEN_HEIGHT >> 3)
-
-//Player states
-#define STATE_UNACTIVE 0
-#define STATE_IDLE 1
-#define STATE_RUN 2
-#define STATE_ATACK 3
-
-#define SUFF_COUNT 100
-
-/**
-Datos del mapa maps.c Los arrays estan implementados en maps.c
-*/
-#define MAP_SIZE_X 128
-#define MAP_SIZE_Y 18
-#define LEVEL_WIDTH (MAP_SIZE_X * 8)
-#define LEVEL_HEIGHT (MAP_SIZE_Y * 8)
 
 extern const unsigned char FONT_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char MAP_TILES[];//Informacion de los tiles (imagenes)
@@ -85,58 +22,6 @@ extern unsigned UBYTE popoLevel_1_X[];//Posiciones de los malos
 extern unsigned UBYTE popoLevel_1_Y[];//Posiciones de los malos
 extern unsigned UBYTE babitLevel_1_X[];//Posiciones de los malos
 extern unsigned UBYTE babitLevel_1_Y[];//Posiciones de los malos
-
-
-UINT8 getNumberDigits(UINT16 number, UINT8 c) {
-    c++;
-    if(number / 10 == 0) {
-        return c;
-    } else {
-        number /= 10;
-        return getNumberDigits(number, c);
-    }
-}
-UINT8 getDigit(UINT16 number, UINT8 digit) {
-
-    if(digit >= getNumberDigits(number, 0)) {
-        return 0;
-    } else {
-        int d = number%10;
-        if(digit == 0) {
-            return d;
-        } else {
-            int n = number/10;
-            digit--;
-            getDigit(n, digit);
-        }
-    }
-}
-void drawPoints(UINT16 points, UINT8 digits, UINT8 positionX, UINT8 positionY) {
-
-    UINT8 i;
-    UINT8 digit;
-    for(i = 0; i != digits; i++) {
-        //UINT8 tile = points[i] - 48;//Cast chat to int
-        digit = getDigit(points, (digits - (i+1)));
-        set_sprite_tile(i, digit);
-        move_sprite(i, positionX + (i << 3), positionY);
-    }
-}
-void drawNumbers(UINT8 digits, UINT16 number, UINT8 positionX, UINT8 positionY) {
-
-    UINT8 digit = (number % 10);
-
-    set_sprite_tile(digits-1, digit);
-    move_sprite(digits-1, positionX + ((digits-1) << 3), positionY);
-
-    if(number / 10 == 0) {
-        return;
-    } else {
-        digits--;
-        drawNumbers(digits, number / 10, positionX, positionY);
-    }
-}
-
 
 struct Player {
     UINT16 x;
@@ -168,102 +53,30 @@ struct Camera {
     UINT16 lastX;
 };
 
-UBYTE blink01(UBYTE value){
-    if(!value){
-        return TRUE;
-    }else{
-        return FALSE;
+void drawPoints(UINT16 points, UINT8 digits, UINT8 positionX, UINT8 positionY) {
+
+    UINT8 i;
+    UINT8 digit;
+    for(i = 0; i != digits; i++) {
+        //UINT8 tile = points[i] - 48;//Cast chat to int
+        digit = getDigit(points, (digits - (i+1)));
+        set_sprite_tile(i, digit);
+        move_sprite(i, positionX + (i << 3), positionY);
     }
 }
+void drawNumbers(UINT8 digits, UINT16 number, UINT8 positionX, UINT8 positionY) {
 
-UINT16 getScroll(UINT16 objX, UINT16 scrollX) {
+    UINT8 digit = (number % 10);
 
-    if(objX > SCREEN_WIDTH2 && objX > scrollX + SCREEN_WIDTH2){
-        if(objX < LEVEL_WIDTH - SCREEN_WIDTH2){
-            return objX - SCREEN_WIDTH2;
-        }
-        else{
-            return LEVEL_WIDTH - SCREEN_WIDTH;
-        }
-    }else{
-        return scrollX;
+    set_sprite_tile(digits-1, digit);
+    move_sprite(digits-1, positionX + ((digits-1) << 3), positionY);
+
+    if(number / 10 == 0) {
+        return;
+    } else {
+        digits--;
+        drawNumbers(digits, number / 10, positionX, positionY);
     }
-}
-UBYTE isInScreen(UINT16 scrollX, UINT16 x, UINT16 width){
-    if(x < scrollX + SCREEN_WIDTH && x + width > scrollX){
-        return TRUE;
-    }else{
-        return FALSE;
-    }
-}
-
-UBYTE getFrameIdle(UBYTE gameFrame, UBYTE characterFrame, UBYTE speed) {
-    UBYTE f =characterFrame;
-    if(gameFrame%speed == 0) {
-        if(characterFrame == 1){
-            f = 0;
-        }else{
-            f = 1;
-        }
-    }
-    return f;
-}
-
-UBYTE getPlayerFrameRun(UBYTE gameFrame, UBYTE playerFrame) {
-    if(gameFrame%4 == 0) {
-        playerFrame = (playerFrame +1)%3;
-    }
-    return playerFrame;
-}
-
-UBYTE checkCollision(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2){
-    if(x1 + w1 > x2 && x1 < x2 + w2){
-        if(y1 + h1 > y2 && y1 < y2 + h2){
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-void flipPlayer(UBYTE flip){
-    //Solo flipean cabeza y piernas
-    set_sprite_prop(SPRITE_PLAYER_1, flip);
-    set_sprite_prop(SPRITE_PLAYER_2, flip);
-    set_sprite_prop(SPRITE_PLAYER_3, flip);
-    set_sprite_prop(SPRITE_PLAYER_4, flip);
-    set_sprite_prop(SPRITE_PLAYER_5, flip);
-    set_sprite_prop(SPRITE_PLAYER_6, flip);
-    set_sprite_prop(SPRITE_PLAYER_7, flip);
-    set_sprite_prop(SPRITE_PLAYER_8, flip);
-
-    set_sprite_prop(SPRITE_PLAYER_9, flip);
-    set_sprite_prop(SPRITE_PLAYER_10, flip);
-}
-
-UINT8 getGravitySpeed(UINT16 gravityForce, UINT16 weight){
-    UINT16 newGravityForce;
-    UINT16 newWeight;
-    /*
-    Regla de tres
-    (Las pruebas se hicieron con desplazamientos de 8 (3 bits), de esta manera, si se cambia esto, la fisica se adapta)
-    8               = gravityForce
-    PRECISION_BITS  = newGravityForce
-    8               = weight
-    PRECISION_BITS  = newWeight
-    */
-    newGravityForce = (PRECISION_BITS * gravityForce) >> 3;
-    newWeight = (PRECISION_BITS * weight) >> 3;
-    return newGravityForce * newWeight;
-}
-
-UINT8 getStrongJump(UINT16 strongJump){
-    /*
-    Regla de tres INVERSA
-    (Las pruebas se hicieron con desplazamientos de 8 (3 bits), de esta manera, si se cambia esto, la fisica se adapta)
-    8               = strongJump
-    PRECISION_BITS  = newStrongJump
-    */
-    return (8 * strongJump) / PRECISION_BITS;
 }
 
 //Quitar el plater de aqui y pasar su posicion por parametro
@@ -557,13 +370,156 @@ void moveSpriteBabit(struct Camera *camera, struct Enemy *babit, UBYTE count){
     }
 }
 
+void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
+    UBYTE i;
+
+    if((*player).suffCount != 0){
+        (*player).suffCount--;
+
+        for(i = 0; i < 10; i++){
+            set_sprite_tile(SPRITE_PLAYER_1+i, TILE_BLANK);
+        }
+    }
+    if((*player).suffCount%2 == 0){
+        //Movimiento de los sprites //ANCHOR-> abajo derecha
+
+        //Cabeza
+        set_sprite_tile(SPRITE_PLAYER_1, TILE_PLAYER_HEAD_1);
+        set_sprite_tile(SPRITE_PLAYER_2, TILE_PLAYER_HEAD_2);
+        set_sprite_tile(SPRITE_PLAYER_3, TILE_PLAYER_HEAD_3);
+        set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_HEAD_4);
+        //Cuerpo
+        set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
+        set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
+        //Tiles especiales reseteados a blanco
+        set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);//Especial(Sobreesale)
+        set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);//Especial(Sobreesale)
+
+        if(!isInGround){
+            //Piernas
+            set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
+            set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_JUMP_2);
+        }
+        else{
+            if((*player).state == STATE_RUN){
+                //Piernas
+                (*player).frame = getPlayerFrameRun(frame, (*player).frame);
+                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_RUN_F1_1 + ((*player).frame<<1));
+                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_RUN_F1_2 + ((*player).frame<<1));
+            }
+            else if((*player).state == STATE_IDLE){
+               //Piernas
+                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
+                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_FOOTS_2);
+
+            }
+            else if((*player).state == STATE_ATACK){
+                if((*player).frame < 3){
+                    //Cuerpo
+                    set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
+                    //Piernas
+                    set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
+                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
+                }
+                else if((*player).frame < 9){
+                //Atack frame 2
+                    //Cabeza
+                    set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_ATACK_F2_1);//Especial
+                    set_sprite_tile(SPRITE_PLAYER_9, TILE_PLAYER_ATACK_F2_2);//Especial(Sobreesale)
+                    //Cuerpo
+                    set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F2_3);//Especial
+                    set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_F2_4);//Especial(Sobreesale)
+                    //Piernas
+                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
+                }
+                else if((*player).frame < 12){
+                    //Cuerpo
+                    set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
+                    //Piernas
+                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
+                }
+                else{
+                    (*player).state = STATE_IDLE;
+                    (*player).frame = 0;
+                }
+            }
+        }
+    }
+    if((*player).state == STATE_ATACK){
+        (*player).frame++;
+    }
+}
+
+void flipPlayer(UBYTE flip){
+    //Solo flipean cabeza y piernas
+    set_sprite_prop(SPRITE_PLAYER_1, flip);
+    set_sprite_prop(SPRITE_PLAYER_2, flip);
+    set_sprite_prop(SPRITE_PLAYER_3, flip);
+    set_sprite_prop(SPRITE_PLAYER_4, flip);
+    set_sprite_prop(SPRITE_PLAYER_5, flip);
+    set_sprite_prop(SPRITE_PLAYER_6, flip);
+    set_sprite_prop(SPRITE_PLAYER_7, flip);
+    set_sprite_prop(SPRITE_PLAYER_8, flip);
+
+    set_sprite_prop(SPRITE_PLAYER_9, flip);
+    set_sprite_prop(SPRITE_PLAYER_10, flip);
+}
+
+void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGround, UBYTE frame){
+    UBYTE temp;
+    UBYTE temp2;
+
+    if((*player).flip){
+        flipPlayer(S_FLIPX);
+        temp = 8;
+    }else{
+        flipPlayer(0);
+        temp = 0;
+    }
+    temp2 = 0;
+    //Ñapa para la animacion idle (Muevo algunos sprites un pixel)
+    if((*player).state == STATE_IDLE){
+        (*player).frame = getFrameIdle(frame, (*player).frame, 15);
+        temp2 = (*player).frame;
+    }
+    (*player).flip == FALSE;
+
+    //Coloco los sprites en su posicion
+    move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +16 +temp2);
+    move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +16 +temp2);
+    move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +24 +temp2);
+    move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +24 +temp2);
+    move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +32 +temp2);
+    move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +32 +temp2);
+    move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +40);
+    move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +40);
+
+    if(isInGround){
+
+        if((*player).state == STATE_ATACK){
+            if((*player).frame < 3){
+                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +40);//ESPECIAL
+            }else if((*player).frame < 9){
+                //Atack frame 2
+                move_sprite(SPRITE_PLAYER_9, ((*player).x DEC_BITS) - (*camera).scroll+24-(temp*3), (*player).y +24);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll+16-temp, (*player).y +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_10, ((*player).x DEC_BITS) - (*camera).scroll+24-(temp*3), (*player).y +32);//ESPECIAL
+            }else if((*player).frame < 12){
+                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll+16-temp, (*player).y +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scroll+8+temp, (*player).y +40);//ESPECIAL
+            }
+        }
+    }
+}
+
 void showEnemy(
                struct Camera *camera,
                struct Enemy *enemyList[],
                UBYTE maxEnemy,
                UBYTE *listX,
                UBYTE *listY,
-               UBYTE size,
+               UBYTE arraySize,
                UBYTE enemyWidth){
     UBYTE i;
     UBYTE j;
@@ -571,7 +527,7 @@ void showEnemy(
     UBYTE posY;
     struct Enemy *e;
 
-    for(i = 0; i < size; i++){
+    for(i = 0; i < arraySize; i++){
         posX = listX[i];
         posY = listY[i];
         posX = posX<<3;
@@ -962,112 +918,8 @@ void main() {
         /**
         Pintado Player
         */
-        if(player.suffCount != 0){
-            player.suffCount--;
-
-            for(count = 0; count < 10; count++){
-                set_sprite_tile(SPRITE_PLAYER_1+count, TILE_BLANK);
-            }
-
-        }
-        if(player.suffCount%2 == 0){
-        //Movimiento de los sprites //ANCHOR-> abajo derecha
-        if(player.flip){
-            flipPlayer(S_FLIPX);
-            temp = 8;
-        }else{
-            flipPlayer(0);
-            temp = 0;
-        }
-        temp2 = 0;
-        //Ñapa para la animacion idle (Muevo algunos sprites un pixel)
-        if(player.state == STATE_IDLE){
-            player.frame = getFrameIdle(frame, player.frame, 15);
-            temp2 = player.frame;
-        }
-        player.flip == FALSE;
-
-        //Cabeza
-        set_sprite_tile(SPRITE_PLAYER_1, TILE_PLAYER_HEAD_1);
-        set_sprite_tile(SPRITE_PLAYER_2, TILE_PLAYER_HEAD_2);
-        set_sprite_tile(SPRITE_PLAYER_3, TILE_PLAYER_HEAD_3);
-        set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_HEAD_4);
-        //Cuerpo
-        set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
-        set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
-        //Tiles especiales reseteados a blanco
-        set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);//Especial(Sobreesale)
-        set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);//Especial(Sobreesale)
-
-        //Coloco los sprites en su posicion
-        move_sprite(SPRITE_PLAYER_1, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +16 +temp2);
-        move_sprite(SPRITE_PLAYER_2, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +16 +temp2);
-        move_sprite(SPRITE_PLAYER_3, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +24 +temp2);
-        move_sprite(SPRITE_PLAYER_4, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +24 +temp2);
-        move_sprite(SPRITE_PLAYER_5, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +32 +temp2);
-        move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +32 +temp2);
-        move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +40);
-        move_sprite(SPRITE_PLAYER_8, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +40);
-
-        if(!isInGround){
-            //Piernas
-            set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
-            set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_JUMP_2);
-        }else{
-            if(player.state == STATE_RUN){
-                //Piernas
-                player.frame = getPlayerFrameRun(frame, player.frame);
-                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_RUN_F1_1 + (player.frame<<1));
-                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_RUN_F1_2 + (player.frame<<1));
-            }
-            else if(player.state == STATE_IDLE){
-               //Piernas
-                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
-                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_FOOTS_2);
-
-            }
-            else if(player.state == STATE_ATACK){
-                if(player.frame < 3){
-                    //Cuerpo
-                    set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
-                    //Piernas
-                    set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
-                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
-
-                    move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll +16 -temp, player.y +32);//ESPECIAL
-                    move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll +8 +temp, player.y +40);//ESPECIAL
-                }else if(player.frame < 9){
-                //Atack frame 2
-                    //Cabeza
-                    set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_ATACK_F2_1);//Especial
-                    set_sprite_tile(SPRITE_PLAYER_9, TILE_PLAYER_ATACK_F2_2);//Especial(Sobreesale)
-                    //Cuerpo
-                    set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F2_3);//Especial
-                    set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_F2_4);//Especial(Sobreesale)
-                    //Piernas
-                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
-
-                    move_sprite(SPRITE_PLAYER_9, (player.x DEC_BITS) - camera.scroll+24-(temp*3), player.y +24);//ESPECIAL
-                    move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, player.y +32);//ESPECIAL
-                    move_sprite(SPRITE_PLAYER_10, (player.x DEC_BITS) - camera.scroll+24-(temp*3), player.y +32);//ESPECIAL
-                }else if(player.frame < 12){
-                    //Cuerpo
-                    set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
-                    //Piernas
-                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
-
-                    move_sprite(SPRITE_PLAYER_6, (player.x DEC_BITS) - camera.scroll+16-temp, player.y +32);//ESPECIAL
-                    move_sprite(SPRITE_PLAYER_7, (player.x DEC_BITS) - camera.scroll+8+temp, player.y +40);//ESPECIAL
-                }else{
-                    player.state = STATE_IDLE;
-                    player.frame = 0;
-                }
-            }
-        }
-        }
-        if(player.state == STATE_ATACK){
-            player.frame++;
-        }
+        drawPlayer(&player, isInGround, frame);
+        moveSpritePlayer(&camera, &player, isInGround, frame);
 
         //Actualizo los valores de la camara
         camera.lastX = camera.scroll;
