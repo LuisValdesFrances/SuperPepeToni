@@ -9,13 +9,15 @@
 #include "collision.h"
 #include "enemyPosition.h"
 #include "utils.h"
-
-
+#include "text.h"
 
 extern const unsigned char FONT_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char MAP_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char SPRITE_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char LEVEL1[];//Colisiones y distribucion
+extern unsigned UBYTE platformLevel_1_X[];//Posiciones de los malos
+extern unsigned UBYTE platformLevel_1_Y[];//Posiciones de los malos
+extern unsigned UBYTE platformLevel_1_Path[];//Posiciones de los malos
 extern unsigned UBYTE gochiLevel_1_X[];//Posiciones de los malos
 extern unsigned UBYTE gochiLevel_1_Y[];//Posiciones de los malos
 extern unsigned UBYTE popoLevel_1_X[];//Posiciones de los malos
@@ -42,6 +44,12 @@ struct Enemy {
     UBYTE expCount;
 };
 
+struct Platform {
+    UBYTE x;
+    UBYTE y;
+    UBYTE path;
+};
+
 struct Bullet {
     UINT16 x;
     UBYTE y;
@@ -53,33 +61,7 @@ struct Camera {
     UINT16 lastX;
 };
 
-void drawPoints(UINT16 points, UINT8 digits, UINT8 positionX, UINT8 positionY) {
-
-    UINT8 i;
-    UINT8 digit;
-    for(i = 0; i != digits; i++) {
-        //UINT8 tile = points[i] - 48;//Cast chat to int
-        digit = getDigit(points, (digits - (i+1)));
-        set_sprite_tile(i, digit);
-        move_sprite(i, positionX + (i << 3), positionY);
-    }
-}
-void drawNumbers(UINT8 digits, UINT16 number, UINT8 positionX, UINT8 positionY) {
-
-    UINT8 digit = (number % 10);
-
-    set_sprite_tile(digits-1, digit);
-    move_sprite(digits-1, positionX + ((digits-1) << 3), positionY);
-
-    if(number / 10 == 0) {
-        return;
-    } else {
-        digits--;
-        drawNumbers(digits, number / 10, positionX, positionY);
-    }
-}
-
-//Quitar el plater de aqui y pasar su posicion por parametro
+//Quitar el player de aqui y pasar su posicion por parametro
 UBYTE checkPlayerDamage(struct Camera *camera, struct Player *player, UINT16 enemyX, UBYTE enemyY, UBYTE enemyW, UBYTE enemyH){
     if(isInScreen((*camera).scroll, (enemyX DEC_BITS), enemyW)){
         if((*player).suffCount == 0
@@ -113,6 +95,30 @@ void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy
                 }
             }
         }
+    }
+}
+
+void movePlatform(struct Platform *platform, UBYTE platformW, UBYTE platformH, UBYTE speed, unsigned char *level){
+    UBYTE newY;
+    UINT16 x;
+    if((*platform).x != 0){
+        //La posicion x indica el tile en el que se encuentra, por eso necesito multiplicar por 8 para obtener la posicion
+        x = (*platform).x;
+        x = x<<3;
+        if((*platform).path){
+            newY = (*platform).y + speed;
+        }else{
+            newY = (*platform).y - speed;        }
+        if(isCollisionDownT(x, newY, platformW, platformH+1, MAP_SIZE_X, level)){
+            newY = (*platform).y;
+            (*platform).path = blink01((*platform).path);
+        }
+        if(isCollisionUpT(x, newY, platformW, MAP_SIZE_X, level)){
+            newY = (*platform).y;
+            (*platform).path = blink01((*platform).path);
+        }
+
+        (*platform).y = newY;
     }
 }
 
@@ -202,12 +208,14 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
             }
         }
     }else{
+        /*Estos sprites se usan tambien para la plataforma
         count2 = 5;
         do
         {
             set_sprite_tile(SPRITE_ENEMY_16X24_1 + count2 + temp, TILE_BLANK);
         }
         while(count2--);
+        */
     }
 }
 
@@ -229,6 +237,62 @@ void moveSpriteGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count){
         move_sprite(SPRITE_ENEMY_16X24_5+temp,((*gochi).x DEC_BITS) - (*camera).scroll +8 + temp2, ((*gochi).y) +32);
         move_sprite(SPRITE_ENEMY_16X24_6+temp,((*gochi).x DEC_BITS) - (*camera).scroll +16 - temp2, ((*gochi).y) +32);
     }
+}
+
+void drawPlatform(struct Camera *camera, struct Platform *platform, UBYTE count){
+    UBYTE temp;
+    UINT16 x;
+    //La posicion x indica el tile en el que se encuentra, por eso necesito multiplicar por 8 para obtener la posicion
+    x = (*platform).x;
+    x = x<<3;
+    if((*platform).x != 0 && isInScreen((*camera).scroll, x, PLATFORM_WIDTH)){
+        temp = count*4;//4 es el numero de tiles
+        set_sprite_tile(SPRITE_ENEMY_16X24_1 + temp, TILE_PLATFORM_1);
+        set_sprite_tile(SPRITE_ENEMY_16X24_2 + temp, TILE_PLATFORM_2);
+        set_sprite_tile(SPRITE_ENEMY_16X24_3 + temp, TILE_PLATFORM_3);
+        set_sprite_tile(SPRITE_ENEMY_16X24_4 + temp, TILE_PLATFORM_4);
+    }
+}
+
+void moveSpritePlatform(struct Camera *camera, struct Platform *platform, UBYTE count){
+    UBYTE temp;
+    UINT16 x;
+    //La posicion x indica el tile en el que se encuentra, por eso necesito multiplicar por 8 para obtener la posicion
+    x = (*platform).x;
+    x = x<<3;
+    if((*platform).x != 0 && isInScreen((*camera).scroll, x, PLATFORM_WIDTH)){
+        temp = count*4;//4 es el numero de tiles
+        move_sprite(SPRITE_ENEMY_16X24_1 + temp, x - (*camera).scroll +8, ((*platform).y) +16);
+        move_sprite(SPRITE_ENEMY_16X24_2 + temp, x - (*camera).scroll +16, ((*platform).y) +16);
+        move_sprite(SPRITE_ENEMY_16X24_3 + temp, x - (*camera).scroll +8, ((*platform).y) +24);
+        move_sprite(SPRITE_ENEMY_16X24_4 + temp, x - (*camera).scroll +16, ((*platform).y) +24);
+    }
+}
+
+UBYTE updatePlatform(struct Platform *platformList[], struct Player *player, unsigned char *map){
+
+    UBYTE i;
+    UINT16 x;
+    UBYTE y;
+    UBYTE result;
+    struct Platform *p;
+    result = FALSE;
+    i = NUMBER_PLATFORM_MAP-1;
+    do{
+        p = &platformList[i];
+        movePlatform(p, PLATFORM_WIDTH, PLATFORM_HEIGHT, PLATFORM_SPEED, map);
+
+        x = p->x;
+        y = checkCollisionDown(
+        (*player).x DEC_BITS, (*player).y, PLAYER_WIDTH, PLAYER_HEIGHT, x<<3, p->y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+        if(y){
+            result = TRUE;
+            (*player).y = y - PLAYER_HEIGHT;
+            (*player).velocityDesc = 0;
+        }
+    }while(i--);
+
+    return result;
 }
 
 void drawPopo(struct Camera *camera, struct Enemy *popo, UBYTE count, UBYTE frame){
@@ -590,6 +654,7 @@ void main() {
     UBYTE newY;
 
     char digitPoints[5];
+    struct Platform platformList[NUMBER_PLATFORM_MAP];
     struct Enemy gochiList[MAX_GOCHI];
     struct Enemy popoList[MAX_POPO];
     struct Enemy babitList[MAX_BABIT];
@@ -601,6 +666,7 @@ void main() {
     keyB_Down = FALSE;
     keyA_Up = TRUE;
     keyA_Down = FALSE;
+    isInGround = FALSE;
 
     //Se cararga el mapa correcto
     map = &LEVEL1;
@@ -642,12 +708,11 @@ void main() {
     set_sprite_data(0, TOTAL_TILES, (unsigned char *)SPRITE_TILES);
     //Asigna a un sprite un tile
     //numero del sprite (0-39), posicion del tile
-    /*
     set_sprite_tile(SPRITE_DIGIT_1, TILE_0);
     set_sprite_tile(SPRITE_DIGIT_2, TILE_0);
     set_sprite_tile(SPRITE_DIGIT_3, TILE_0);
     set_sprite_tile(SPRITE_DIGIT_4, TILE_0);
-    */
+    set_sprite_tile(SPRITE_DIGIT_5, TILE_0);
     //set_bkg_tiles(indexX(8 pixelex), indexY(8 pixelex), ancho, alto y mapa)
     //Viejo sistema, hasta 32 tiles me vale...
     //set_bkg_tiles(0, 0, MAP_SIZE_X, MAP_SIZE_Y, map);
@@ -674,6 +739,8 @@ void main() {
     }
 
     SHOW_BKG;//Muestra el fondo
+    //WIN se suporpone a BKG y usa sus mismos tiles, para dejar ver a BKG hay que moverla primero:
+    //SHOW_WIN;
     SHOW_SPRITES;//Muestra los sprites
     DISPLAY_ON;
     enable_interrupts();
@@ -687,6 +754,13 @@ void main() {
     player.state = STATE_IDLE;
     player.suffCount = 0;
 
+    count = NUMBER_PLATFORM_MAP-1;
+    do{
+        platformList[count].x = platformLevel_1_X[count];
+        platformList[count].y = platformLevel_1_Y[count] << 3;
+        platformList[count].path = platformLevel_1_Path[count];
+    }
+    while(count--);
     count = MAX_GOCHI-1;
     do{
         gochiList[count].expCount = 4;
@@ -712,6 +786,8 @@ void main() {
     showEnemy(&camera, &popoList, MAX_POPO, popoMapX, popoMapY, NUMBER_POPO_MAP, POPO_WIDTH);
     showEnemy(&camera, &babitList, MAX_BABIT, babitMapX, babitMapY, NUMBER_BABIT_MAP, BABIT_WIDTH);
 
+    drawString("POINTS WI ", 1, 0, 1);
+    drawString("POINTS BG ", 1, 0, 0);
 
     while(TRUE) {
 
@@ -768,12 +844,18 @@ void main() {
             newY -= (player.velocityAsc DEC_BITS);
             player.velocityAsc -= getGravitySpeed(GRAVITY, PLAYER_WEIGHT);
         }else{
+            //Poner por defect a 1 y ralentizar la plataforma
             player.velocityAsc = 0;
+            /*
+            Este ajuste se debe a que es aconsejable que la velocidad de caida sea superior
+            a la velocidad de descenso de las plataformas móviles, que es de 1.
+            */
             player.velocityDesc += getGravitySpeed(GRAVITY, PLAYER_WEIGHT);
+            if(player.velocityDesc < (2 INC_BITS)){
+                player.velocityDesc = (2 INC_BITS);
+            }
             newY += (player.velocityDesc DEC_BITS);
         }
-        isInGround = isCollisionDown(player.x DEC_BITS, player.y + 1, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, map);
-
 
         /**
         Inputs
@@ -825,9 +907,8 @@ void main() {
             player.velocityDesc = 0;
         }
         if(isCollisionUp(player.x DEC_BITS, newY, PLAYER_WIDTH, MAP_SIZE_X, map)){
-            player.velocityAsc = 0;//En el FK2 iba de lujo
             newY = (((isCollisionUp(player.x DEC_BITS, newY, PLAYER_WIDTH, MAP_SIZE_X, map) / MAP_SIZE_X) << 3) + 8);
-            player.velocityAsc = 0;
+            player.velocityAsc = 0;//En el FK2 iba de lujo
             player.velocityDesc = 0;
         }
         player.y = newY;
@@ -888,6 +969,10 @@ void main() {
             }
         }while(count--);
 
+        //Platform
+        temp = updatePlatform(&platformList, &player, map);
+        isInGround = isCollisionDown(player.x DEC_BITS, player.y + 1, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, map) || temp;
+
 
         wait_vbl_done();
 
@@ -914,6 +999,11 @@ void main() {
             drawBullet(&bulletList[count], count, frame);
             moveSpriteBullet(&camera, &bulletList[count], count);
         }
+        //Platform
+        for(count = 0; count < NUMBER_PLATFORM_MAP; count++){
+            drawPlatform(&camera, &platformList[count], count);
+            moveSpritePlatform(&camera, &platformList[count], count);
+        }
 
         /**
         Pintado Player
@@ -928,7 +1018,7 @@ void main() {
 
         //Movimiento del fondo
         move_bkg(camera.scroll, 0);
-        //scroll_bkg(camera.scroll-camera.lastX, 0);
+        //scroll_bkg(camera.scroll, 0);//Es automatico
         //Al avanzar un tile se actualiza el mapa
         if(screenCountX == 8){
         //if(screenCountX & 8){//Ocupa menos
@@ -993,15 +1083,12 @@ void main() {
             }
         }
         */
+    //Solo refresco cada 30 frames
 
-
-
-
-
-
-
-
-    //drawPoints((gochiList[1].x >> 3) DEC_BITS, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+    //move_win(0, 136);
+    if(frame%30 == 0){
+        drawPoints(platformList[0].y, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+     }
 
     frame++;
 

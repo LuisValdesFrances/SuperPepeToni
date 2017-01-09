@@ -1,4 +1,4 @@
-lcc -c -o main.o main.c keys.o keys.c collision.o collision.c enemyPosition.o enemyPosition.c
+lcc -c -o main.o main.c keys.o keys.c collision.o collision.c enemyPosition.o enemyPosition.c utils.c utils.o text.c text.o
 lcc -Wf-bo2 -c -o mapTiles.o mapTiles.c
 lcc -Wf-bo3 -c -o spriteTiles.o spriteTiles.c
 lcc -Wf-bo4 -c -o maps.o maps.c

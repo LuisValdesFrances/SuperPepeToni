@@ -1,10 +1,6 @@
 #include <gb/gb.h>
 #include "collision.h"
 
-//Tiles que no colisionan
-#define FREE 0x00
-#define NO_COL 0x68
-
 /**
 Contiene los metodos necesarios para, dados un vector de una unica dimension, compobrar si se colisiona
 a partir de una posicion y un tamaño.
@@ -152,6 +148,76 @@ UINT16 isCollisionLeft(UINT16 x, UINT16 y, UINT16 h, UINT16 mapSizeX, unsigned c
         if(levelCollision[indXY] != FREE && levelCollision[indXY] < NO_COL) {
             return indXY;
         }
+    }
+    return 0;
+}
+
+/**
+Colisiones especiales para la plataforma con su target
+*/
+
+/**
+Retorna el tile index(X,Y) del target que colisona por abajo
+*/
+UINT16 isCollisionDownT(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, unsigned char *levelCollision) {
+    UINT16 indX; UINT8 indY; UINT16 indXY; UINT8 offsetX; UINT8 i;
+    /*
+    Si el personaje mide mas de un tile en ancho, se va recorriendo toda su anchura
+    (de 8 en 8-> desplazar 3 bits hacia la izquierda equivale a dividir entre 8)
+    y comprobando si colisiona.
+    */
+    i = 0;
+    //for(i = 0; i < (w>>3); i++)
+    while(i < (w>>3)+1)
+    {
+        offsetX = i * 8;
+        if(i != 0){
+            offsetX--;
+        }
+        i++;
+        /*
+        Convierte la posicion del player en index x/y
+        (Matriz de dos dimensiones donde cada posicion equivale a la informacion en 8 pixeles)
+        */
+        indX = (x + offsetX) / 8;
+        indY = (y + h -1) / 8;
+        //Convierte los index x/y en xy
+        indXY = (indY * mapSizeX) + indX;
+
+        //Recupero el tile
+        if(levelCollision[indXY] == PLATFORM_TARGET) {
+            return indXY;
+        }
+    }
+    return 0;
+}
+
+/**
+Retorna el tile index(X,Y) del target que colisona por arriba
+*/
+UINT16 isCollisionUpT(UINT16 x, UINT16 y, UINT16 w, UINT16 mapSizeX, unsigned char *levelCollision) {
+    UINT16 indX; UINT8 indY; UINT16 indXY; UINT8 offsetX; UINT8 i;
+    i = 0;
+    //for(i = 0; i < (w>>3); i++)
+    while(i < (w>>3)+1)
+    {
+        offsetX = i * 8;
+        if(i != 0){
+            offsetX--;
+        }
+        i++;
+
+        //Convierte la posicion del player en index x/y
+        indX = (x + offsetX) / 8;
+        indY = y / 8;
+        //Convierte los index x/y en xy
+        indXY = (indY * mapSizeX) + indX;
+
+        //Recupero el tile
+        if(levelCollision[indXY] == PLATFORM_TARGET) {
+            return indXY;
+        }
+
     }
     return 0;
 }

@@ -2,6 +2,33 @@
 #include "utils.h"
 #include "constans.h"
 
+void drawPoints(UINT16 points, UINT8 digits, UINT8 positionX, UINT8 positionY) {
+
+    UINT8 i;
+    UINT8 digit;
+    for(i = 0; i != digits; i++) {
+        //UINT8 tile = points[i] - 48;//Cast chat to int
+        digit = getDigit(points, (digits - (i+1)));
+        set_sprite_tile(i, digit);
+        move_sprite(i, positionX + (i << 3), positionY);
+    }
+}
+
+void drawNumbers(UINT8 digits, UINT16 number, UINT8 positionX, UINT8 positionY) {
+
+    UINT8 digit = (number % 10);
+
+    set_sprite_tile(digits-1, digit);
+    move_sprite(digits-1, positionX + ((digits-1) << 3), positionY);
+
+    if(number / 10 == 0) {
+        return;
+    } else {
+        digits--;
+        drawNumbers(digits, number / 10, positionX, positionY);
+    }
+}
+
 UINT8 getNumberDigits(UINT16 number, UINT8 c) {
     c++;
     if(number / 10 == 0) {
@@ -80,6 +107,32 @@ UBYTE checkCollision(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBYTE y
     if(x1 + w1 > x2 && x1 < x2 + w2){
         if(y1 + h1 > y2 && y1 < y2 + h2){
             return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/**
+Chequea si el objeto 1 colisiona por debajo sobre el objeto 2
+Develve la posicion y del objeto 2 si colisiona.0 en cualquier otro caso
+*/
+UBYTE checkCollisionDown(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2){
+    if(x1 + w1 > x2 && x1 < x2 + w2){
+        if(y1 + h1 > y2 && y1 + h1 < y2 + h2){
+            return y2;
+        }
+    }
+    return FALSE;
+}
+
+/**
+Chequea si el objeto 1 colisiona por arriba sobre el objeto 2
+Develve la posicion y del objeto 1 si colisiona.0 en cualquier otro caso
+*/
+UBYTE checkCollisionUp(UINT16 x1, UBYTE y1, UBYTE w1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2){
+    if(x1 + w1 > x2 && x1 < x2 + w2){
+        if(y1 < y2 + h2 && y1 > y2){
+            return y1;
         }
     }
     return FALSE;

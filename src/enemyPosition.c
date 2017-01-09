@@ -1,12 +1,24 @@
 #include <gb/gb.h>
 
 
+const UBYTE platformLevel_1_X[] = {
+    41, 48, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+const UBYTE platformLevel_1_Y[] = {
+    8, 8, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+const UBYTE platformLevel_1_Path[] = {
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
 UBYTE gochiLevel_1_X[] = {
-    27, 56, 60, 70, 100, 0, 0, 0, 0, 0
+    27, 70, 100, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE gochiLevel_1_Y[] = {
-    11, 3, 11, 11, 14, 0, 0, 0, 0, 0
+    11, 11, 14, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE popoLevel_1_X[] = {
@@ -24,3 +36,4 @@ UBYTE babitLevel_1_X[] = {
 UBYTE babitLevel_1_Y[] = {
     13, 4, 0, 0, 0, 0, 0, 0, 0, 0
 };
+

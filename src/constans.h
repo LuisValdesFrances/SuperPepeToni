@@ -19,12 +19,16 @@
 //Payer
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 32
-#define PLAYER_WEIGHT 3
-#define PLAYER_JUMP 2
+#define PLAYER_WEIGHT 5
+#define PLAYER_JUMP 3
 #define PLAYER_SPEED 1 INC_BITS
 //Enemies
 #define POPO 0
 #define GOCHI 1
+
+#define PLATFORM_WIDTH 16
+#define PLATFORM_HEIGHT 16
+#define PLATFORM_SPEED 1//No se desplazan bits
 
 #define POPO_WIDTH 8
 #define POPO_HEIGHT 8
