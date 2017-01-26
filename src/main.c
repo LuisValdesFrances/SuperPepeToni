@@ -208,14 +208,14 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
             }
         }
     }else{
-        /*Estos sprites se usan tambien para la plataforma
+        /*Estos sprites se usan tambien para la plataforma*/
         count2 = 5;
         do
         {
             set_sprite_tile(SPRITE_ENEMY_16X24_1 + count2 + temp, TILE_BLANK);
         }
         while(count2--);
-        */
+
     }
 }
 
@@ -444,7 +444,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
             set_sprite_tile(SPRITE_PLAYER_1+i, TILE_BLANK);
         }
     }
-    if((*player).suffCount%2 == 0){
+    if((*player).suffCount%3 < 2){
         //Movimiento de los sprites //ANCHOR-> abajo derecha
 
         //Cabeza
@@ -668,7 +668,7 @@ void main() {
     keyA_Down = FALSE;
     isInGround = FALSE;
 
-    //Se cararga el mapa correcto
+    //Se carga el mapa correcto
     map = &LEVEL1;
     gochiMapX = &gochiLevel_1_X;
     gochiMapY = &gochiLevel_1_Y;
@@ -999,6 +999,11 @@ void main() {
             drawBullet(&bulletList[count], count, frame);
             moveSpriteBullet(&camera, &bulletList[count], count);
         }
+        /*
+        La plataforma usa los mismos sprites que el Gochi, por esto mismo se debe de pintar despues
+        de este. El Gochi pone los sprites que no usa en color blanco, por lo que si se pinta este
+        despues que la plataforma cambiara sus sprites.
+        */
         //Platform
         for(count = 0; count < NUMBER_PLATFORM_MAP; count++){
             drawPlatform(&camera, &platformList[count], count);

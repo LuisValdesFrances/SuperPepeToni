@@ -21,7 +21,7 @@
 #define PLAYER_HEIGHT 32
 #define PLAYER_WEIGHT 5
 #define PLAYER_JUMP 3
-#define PLAYER_SPEED 1 INC_BITS
+#define PLAYER_SPEED 2 INC_BITS
 //Enemies
 #define POPO 0
 #define GOCHI 1

@@ -31,7 +31,7 @@ UBYTE checkCollisionDown(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBY
 Chequea si el objeto 1 colisiona por arriba sobre el objeto 2
 Develve la posicion y del objeto 1 si colisiona.0 en cualquier otro caso
 */
-UBYTE checkCollisionUp(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2);
+UBYTE checkCollisionUp(UINT16 x1, UBYTE y1, UBYTE w1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2);
 
 UINT8 getGravitySpeed(UINT16 gravityForce, UINT16 weight);
 
