@@ -21,7 +21,7 @@
 #define PLAYER_HEIGHT 32
 #define PLAYER_WEIGHT 5
 #define PLAYER_JUMP 3
-#define PLAYER_SPEED 2 INC_BITS
+#define PLAYER_SPEED 3 INC_BITS
 //Enemies
 #define POPO 0
 #define GOCHI 1
@@ -68,6 +68,6 @@
 Datos del mapa maps.c Los arrays estan implementados en maps.c
 */
 #define MAP_SIZE_X 128
-#define MAP_SIZE_Y 18
+#define MAP_SIZE_Y 32
 #define LEVEL_WIDTH (MAP_SIZE_X * 8)
 #define LEVEL_HEIGHT (MAP_SIZE_Y * 8)

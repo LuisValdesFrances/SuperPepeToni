@@ -57,13 +57,15 @@ struct Bullet {
 };
 
 struct Camera {
-    UINT16 scroll;
+    UINT16 scrollX;
     UINT16 lastX;
+    UBYTE scrollY;
+    UBYTE lastY;
 };
 
 //Quitar el player de aqui y pasar su posicion por parametro
 UBYTE checkPlayerDamage(struct Camera *camera, struct Player *player, UINT16 enemyX, UBYTE enemyY, UBYTE enemyW, UBYTE enemyH){
-    if(isInScreen((*camera).scroll, (enemyX DEC_BITS), enemyW)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, (enemyX DEC_BITS), enemyY, enemyW, enemyH)){
         if((*player).suffCount == 0
             &&
             checkCollision(
@@ -78,7 +80,7 @@ UBYTE checkPlayerDamage(struct Camera *camera, struct Player *player, UINT16 ene
 
 void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH){
     UINT16 temp;
-    if(isInScreen((*camera).scroll, ((*enemy).x DEC_BITS), enemyW)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*enemy).x DEC_BITS), (*enemy).y, enemyW, enemyH)){
         if((*enemy).expCount == 0){
             if((*player).frame > 3 && (*player).frame < 9){
 
@@ -125,7 +127,7 @@ void movePlatform(struct Platform *platform, UBYTE platformW, UBYTE platformH, U
 void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH, UBYTE speed, unsigned char *level){
     UINT16 newX;
     if((*enemy).expCount == 0){
-        if(isInScreen((*camera).scroll, ((*enemy).x DEC_BITS), enemyW)){
+        if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*enemy).x DEC_BITS), (*enemy).y, enemyW, enemyH)){
             if((*enemy).flip){
                 newX = (*enemy).x + speed;
             }else{
@@ -148,18 +150,18 @@ void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE e
             (*enemy).x = newX;
         }else{
             //Si se ha quedado a la izquierda fuera del scroll, lo desactivo
-            if(((*enemy).x DEC_BITS) + enemyW < (*camera).scroll){
+            if(((*enemy).x DEC_BITS) + enemyW < (*camera).scrollX){
                 (*enemy).expCount = 4;
             }
         }
     }
 }
 
-void moveBullet(struct Camera *camera, struct Bullet *bullet, UBYTE bulletW, UBYTE speed, unsigned char *level){
+void moveBullet(struct Camera *camera, struct Bullet *bullet, UBYTE bulletW, UBYTE bulletH, UBYTE speed, unsigned char *level){
     UINT16 newX;
     newX = (*bullet).x - speed;
     if((*bullet).active){
-        if(isInScreen((*camera).scroll, ((*bullet).x DEC_BITS), bulletW)){
+        if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*bullet).x DEC_BITS), (*bullet).y, bulletW, bulletH)){
             if(isCollisionLeft(newX DEC_BITS, (*bullet).y, bulletW, MAP_SIZE_X, level)){
                 (*bullet).active = FALSE;
             }else{
@@ -176,7 +178,7 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
     UBYTE temp;
     UBYTE count2;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scroll, ((*gochi).x DEC_BITS), GOCHI_WIDTH) && (*gochi).expCount != 4){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT) && (*gochi).expCount != 4){
         if((*gochi).expCount == 0){
             set_sprite_tile(SPRITE_ENEMY_16X24_1+temp, TILE_GOCHI_1_F1);
             set_sprite_tile(SPRITE_ENEMY_16X24_2+temp, TILE_GOCHI_2_F1);
@@ -223,19 +225,19 @@ void moveSpriteGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count){
     UBYTE temp;
     UBYTE temp2;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scroll, ((*gochi).x DEC_BITS), GOCHI_WIDTH)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT)){
 
         if((*gochi).flip){
             temp2 = 8;
         }else{
             temp2 = 0;
         }
-        move_sprite(SPRITE_ENEMY_16X24_1+temp,((*gochi).x DEC_BITS) - (*camera).scroll +8 + temp2, ((*gochi).y) +16);
-        move_sprite(SPRITE_ENEMY_16X24_2+temp,((*gochi).x DEC_BITS) - (*camera).scroll +16 - temp2, ((*gochi).y) +16);
-        move_sprite(SPRITE_ENEMY_16X24_3+temp,((*gochi).x DEC_BITS) - (*camera).scroll +8 + temp2, ((*gochi).y) +24);
-        move_sprite(SPRITE_ENEMY_16X24_4+temp,((*gochi).x DEC_BITS) - (*camera).scroll +16 - temp2, ((*gochi).y) +24);
-        move_sprite(SPRITE_ENEMY_16X24_5+temp,((*gochi).x DEC_BITS) - (*camera).scroll +8 + temp2, ((*gochi).y) +32);
-        move_sprite(SPRITE_ENEMY_16X24_6+temp,((*gochi).x DEC_BITS) - (*camera).scroll +16 - temp2, ((*gochi).y) +32);
+        move_sprite(SPRITE_ENEMY_16X24_1+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +8 + temp2, ((*gochi).y) - (*camera).scrollY +16);
+        move_sprite(SPRITE_ENEMY_16X24_2+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +16 - temp2, ((*gochi).y) - (*camera).scrollY +16);
+        move_sprite(SPRITE_ENEMY_16X24_3+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +8 + temp2, ((*gochi).y) - (*camera).scrollY +24);
+        move_sprite(SPRITE_ENEMY_16X24_4+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +16 - temp2, ((*gochi).y) - (*camera).scrollY +24);
+        move_sprite(SPRITE_ENEMY_16X24_5+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +8 + temp2, ((*gochi).y) - (*camera).scrollY +32);
+        move_sprite(SPRITE_ENEMY_16X24_6+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +16 - temp2, ((*gochi).y) - (*camera).scrollY +32);
     }
 }
 
@@ -245,7 +247,7 @@ void drawPlatform(struct Camera *camera, struct Platform *platform, UBYTE count)
     //La posicion x indica el tile en el que se encuentra, por eso necesito multiplicar por 8 para obtener la posicion
     x = (*platform).x;
     x = x<<3;
-    if((*platform).x != 0 && isInScreen((*camera).scroll, x, PLATFORM_WIDTH)){
+    if((*platform).x != 0 && isInScreen((*camera).scrollX, (*camera).scrollY, x, (*platform).y, PLATFORM_WIDTH, PLATFORM_HEIGHT)){
         temp = count*4;//4 es el numero de tiles
         set_sprite_tile(SPRITE_ENEMY_16X24_1 + temp, TILE_PLATFORM_1);
         set_sprite_tile(SPRITE_ENEMY_16X24_2 + temp, TILE_PLATFORM_2);
@@ -260,12 +262,12 @@ void moveSpritePlatform(struct Camera *camera, struct Platform *platform, UBYTE 
     //La posicion x indica el tile en el que se encuentra, por eso necesito multiplicar por 8 para obtener la posicion
     x = (*platform).x;
     x = x<<3;
-    if((*platform).x != 0 && isInScreen((*camera).scroll, x, PLATFORM_WIDTH)){
+    if((*platform).x != 0 && isInScreen((*camera).scrollX, (*camera).scrollY, x, (*platform).y, PLATFORM_WIDTH, PLATFORM_HEIGHT)){
         temp = count*4;//4 es el numero de tiles
-        move_sprite(SPRITE_ENEMY_16X24_1 + temp, x - (*camera).scroll +8, ((*platform).y) +16);
-        move_sprite(SPRITE_ENEMY_16X24_2 + temp, x - (*camera).scroll +16, ((*platform).y) +16);
-        move_sprite(SPRITE_ENEMY_16X24_3 + temp, x - (*camera).scroll +8, ((*platform).y) +24);
-        move_sprite(SPRITE_ENEMY_16X24_4 + temp, x - (*camera).scroll +16, ((*platform).y) +24);
+        move_sprite(SPRITE_ENEMY_16X24_1 + temp, x - (*camera).scrollX +8, ((*platform).y) - (*camera).scrollY  +16);
+        move_sprite(SPRITE_ENEMY_16X24_2 + temp, x - (*camera).scrollX +16, ((*platform).y) - (*camera).scrollY  +16);
+        move_sprite(SPRITE_ENEMY_16X24_3 + temp, x - (*camera).scrollX +8, ((*platform).y) - (*camera).scrollY  +24);
+        move_sprite(SPRITE_ENEMY_16X24_4 + temp, x - (*camera).scrollX +16, ((*platform).y) - (*camera).scrollY  +24);
     }
 }
 
@@ -298,7 +300,7 @@ UBYTE updatePlatform(struct Platform *platformList[], struct Player *player, uns
 void drawPopo(struct Camera *camera, struct Enemy *popo, UBYTE count, UBYTE frame){
     UBYTE temp;
     temp = count*1;//1 es el numero de tiles
-    if(isInScreen((*camera).scroll, ((*popo).x DEC_BITS), POPO_WIDTH)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*popo).x DEC_BITS), (*popo).y, POPO_WIDTH, POPO_HEIGHT)){
         set_sprite_tile(SPRITE_ENEMY_8X8_1 + temp, TILE_POPO_F1 + ((*popo).frame));
         (*popo).frame = getFrameIdle(frame, (*popo).frame, 15);
         if((*popo).flip){
@@ -314,8 +316,8 @@ void drawPopo(struct Camera *camera, struct Enemy *popo, UBYTE count, UBYTE fram
 void moveSpritePopo(struct Camera *camera, struct Enemy *popo, UBYTE count){
     UBYTE temp;
     temp = count*1;//1 es el numero de tiles
-    if(isInScreen((*camera).scroll, ((*popo).x DEC_BITS), POPO_WIDTH) && (*popo).expCount == 0){
-        move_sprite(SPRITE_ENEMY_8X8_1 + temp,((*popo).x DEC_BITS) - (*camera).scroll +8, ((*popo).y) +16);
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*popo).x DEC_BITS), (*popo).y, POPO_WIDTH, POPO_HEIGHT) && (*popo).expCount == 0){
+        move_sprite(SPRITE_ENEMY_8X8_1 + temp,((*popo).x DEC_BITS) - (*camera).scrollX +8, ((*popo).y) - (*camera).scrollY  +16);
     }
 }
 
@@ -332,8 +334,8 @@ void drawBullet(struct Bullet *bullet, UBYTE count){
 void moveSpriteBullet(struct Camera *camera, struct Bullet *bullet, UBYTE count){
     UBYTE temp;
     temp = count*1;//1 es el numero de tiles
-    if(isInScreen((*camera).scroll, ((*bullet).x DEC_BITS), BULLET_WIDTH) && (*bullet).active){
-        move_sprite(SPRITE_BULLET + temp,((*bullet).x DEC_BITS) - (*camera).scroll +8, ((*bullet).y) +16);
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*bullet).x DEC_BITS), (*bullet).y, BULLET_WIDTH, BULLET_HEIGHT) && (*bullet).active){
+        move_sprite(SPRITE_BULLET + temp,((*bullet).x DEC_BITS) - (*camera).scrollX +8, ((*bullet).y) - (*camera).scrollY +16);
     }
 }
 
@@ -359,7 +361,7 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bullet
     UBYTE temp;
     UBYTE count2;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scroll, ((*babit).x DEC_BITS), BABIT_WIDTH) && (*babit).expCount != 4){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*babit).x DEC_BITS), (*babit).y, BABIT_WIDTH, BABIT_HEIGHT) && (*babit).expCount != 4){
         if((*babit).expCount == 0){
             set_sprite_tile(SPRITE_ENEMY_24X32_1+temp, TILE_BABIT_1_F1);
             set_sprite_tile(SPRITE_ENEMY_24X32_2+temp, TILE_BABIT_2_F1);
@@ -415,22 +417,22 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bullet
 void moveSpriteBabit(struct Camera *camera, struct Enemy *babit, UBYTE count){
     UBYTE temp;
     temp = count*11;//11 es el numero de sprites
-    if(isInScreen((*camera).scroll, ((*babit).x DEC_BITS), BABIT_WIDTH)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*babit).x DEC_BITS), (*babit).y, BABIT_WIDTH, BABIT_HEIGHT)){
 
-        move_sprite(SPRITE_ENEMY_24X32_1+temp,((*babit).x DEC_BITS) - (*camera).scroll +16, ((*babit).y) +16);
-        move_sprite(SPRITE_ENEMY_24X32_2+temp,((*babit).x DEC_BITS) - (*camera).scroll +24, ((*babit).y) +16);
+        move_sprite(SPRITE_ENEMY_24X32_1+temp,((*babit).x DEC_BITS) - (*camera).scrollX +16, ((*babit).y) - (*camera).scrollY  +16);
+        move_sprite(SPRITE_ENEMY_24X32_2+temp,((*babit).x DEC_BITS) - (*camera).scrollX +24, ((*babit).y) - (*camera).scrollY  +16);
 
-        move_sprite(SPRITE_ENEMY_24X32_3+temp,((*babit).x DEC_BITS) - (*camera).scroll +8, ((*babit).y) +24);
-        move_sprite(SPRITE_ENEMY_24X32_4+temp,((*babit).x DEC_BITS) - (*camera).scroll +16, ((*babit).y) +24);
-        move_sprite(SPRITE_ENEMY_24X32_5+temp,((*babit).x DEC_BITS) - (*camera).scroll +24, ((*babit).y) +24);
+        move_sprite(SPRITE_ENEMY_24X32_3+temp,((*babit).x DEC_BITS) - (*camera).scrollX +8, ((*babit).y) - (*camera).scrollY  +24);
+        move_sprite(SPRITE_ENEMY_24X32_4+temp,((*babit).x DEC_BITS) - (*camera).scrollX +16, ((*babit).y) - (*camera).scrollY  +24);
+        move_sprite(SPRITE_ENEMY_24X32_5+temp,((*babit).x DEC_BITS) - (*camera).scrollX +24, ((*babit).y) - (*camera).scrollY  +24);
 
-        move_sprite(SPRITE_ENEMY_24X32_6+temp,((*babit).x DEC_BITS) - (*camera).scroll +8, ((*babit).y) +32);
-        move_sprite(SPRITE_ENEMY_24X32_7+temp,((*babit).x DEC_BITS) - (*camera).scroll +16, ((*babit).y) +32);
-        move_sprite(SPRITE_ENEMY_24X32_8+temp,((*babit).x DEC_BITS) - (*camera).scroll +24, ((*babit).y) +32);
+        move_sprite(SPRITE_ENEMY_24X32_6+temp,((*babit).x DEC_BITS) - (*camera).scrollX +8, ((*babit).y) - (*camera).scrollY  +32);
+        move_sprite(SPRITE_ENEMY_24X32_7+temp,((*babit).x DEC_BITS) - (*camera).scrollX +16, ((*babit).y) - (*camera).scrollY  +32);
+        move_sprite(SPRITE_ENEMY_24X32_8+temp,((*babit).x DEC_BITS) - (*camera).scrollX +24, ((*babit).y) - (*camera).scrollY  +32);
 
-        move_sprite(SPRITE_ENEMY_24X32_9+temp,((*babit).x DEC_BITS) - (*camera).scroll +8, ((*babit).y) +40);
-        move_sprite(SPRITE_ENEMY_24X32_10+temp,((*babit).x DEC_BITS) - (*camera).scroll +16, ((*babit).y) +40);
-        move_sprite(SPRITE_ENEMY_24X32_11+temp,((*babit).x DEC_BITS) - (*camera).scroll +24, ((*babit).y) +40);
+        move_sprite(SPRITE_ENEMY_24X32_9+temp,((*babit).x DEC_BITS) - (*camera).scrollX +8, ((*babit).y) - (*camera).scrollY  +40);
+        move_sprite(SPRITE_ENEMY_24X32_10+temp,((*babit).x DEC_BITS) - (*camera).scrollX +16, ((*babit).y) - (*camera).scrollY  +40);
+        move_sprite(SPRITE_ENEMY_24X32_11+temp,((*babit).x DEC_BITS) - (*camera).scrollX +24, ((*babit).y - (*camera).scrollY ) +40);
     }
 }
 
@@ -549,29 +551,29 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
     (*player).flip == FALSE;
 
     //Coloco los sprites en su posicion
-    move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +16 +temp2);
-    move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +16 +temp2);
-    move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +24 +temp2);
-    move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +24 +temp2);
-    move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +32 +temp2);
-    move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +32 +temp2);
-    move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +40);
-    move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +40);
+    move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +16 +temp2);
+    move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +16 +temp2);
+    move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +24 +temp2);
+    move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +24 +temp2);
+    move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +32 +temp2);
+    move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32 +temp2);
+    move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40);
+    move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +40);
 
     if(isInGround){
 
         if((*player).state == STATE_ATACK){
             if((*player).frame < 3){
-                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll +16 -temp, (*player).y +32);//ESPECIAL
-                move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scroll +8 +temp, (*player).y +40);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40);//ESPECIAL
             }else if((*player).frame < 9){
                 //Atack frame 2
-                move_sprite(SPRITE_PLAYER_9, ((*player).x DEC_BITS) - (*camera).scroll+24-(temp*3), (*player).y +24);//ESPECIAL
-                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll+16-temp, (*player).y +32);//ESPECIAL
-                move_sprite(SPRITE_PLAYER_10, ((*player).x DEC_BITS) - (*camera).scroll+24-(temp*3), (*player).y +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_9, ((*player).x DEC_BITS) - (*camera).scrollX +24-(temp*3), (*player).y - (*camera).scrollY  +24);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16-temp, (*player).y - (*camera).scrollY  +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_10, ((*player).x DEC_BITS) - (*camera).scrollX +24-(temp*3), (*player).y - (*camera).scrollY  +32);//ESPECIAL
             }else if((*player).frame < 12){
-                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scroll+16-temp, (*player).y +32);//ESPECIAL
-                move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scroll+8+temp, (*player).y +40);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16-temp, (*player).y - (*camera).scrollY  +32);//ESPECIAL
+                move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8+temp, (*player).y - (*camera).scrollY  +40);//ESPECIAL
             }
         }
     }
@@ -597,7 +599,7 @@ void showEnemy(
         posX = posX<<3;
         posY = posY<<3;
 
-        if(listX[i] != 0 && (*camera).scroll + SCREEN_WIDTH + enemyWidth >= posX){
+        if(listX[i] != 0 && (*camera).scrollX + SCREEN_WIDTH + enemyWidth >= posX){
             //Saco bicho
             for(j = 0; j < maxEnemy; j++){
                 //Accedo a un puntero que apunta a un vector de structs
@@ -618,6 +620,70 @@ void showEnemy(
     }
 }
 
+void moveBGX(struct Camera *camera, unsigned char *map){
+    UINT16 tileX;
+    UINT16 indexXY;
+    UBYTE tileXMod;
+    UBYTE count;
+    UBYTE tileY;
+
+    /**
+    Posiciona el indice X en la posicion del vector a rellenar
+    camera.scroll>>3 es la suma de tiles de 8x8 avanzados: camera.scroll/8
+    Ejemplo: el primer tile que se avance sera 1 + 21 = 22
+    Como el tile que queremos rellenar de mas a la derecha se encuentra fuera de la pantalla (20 tiles) sumo 21
+    */
+    tileX = ((*camera).scrollX>>3)+21;
+
+    /**
+    El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
+    (Le sigue el 0, no el 33)
+    Es el motivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
+    */
+    tileXMod = tileX%32;
+
+    //18 son los tiles que entran en la pantalla en alto
+    for(count = 0; count != 32; count++ ){
+        //Solo relleno el ultimo tile por la derecha
+        set_bkg_tiles(tileXMod, count, 1, 1, &(map+tileX));
+        //Incrementa con con el tamaño de X para que se cargue la proxima fila
+        tileX = tileX + MAP_SIZE_X;
+    }
+}
+
+void moveBGY(struct Camera *camera, unsigned char *map){
+    UINT16 tileX;
+    UINT16 tileY;
+    UBYTE tileYMod;
+    UBYTE count;
+    /**
+    Posiciona el indice X en la posicion del vector a rellenar
+    camera.scroll>>3 es la suma de tiles de 8x8 avanzados: camera.scroll/8
+    Ejemplo: el primer tile que se avance sera 1 + 21 = 22
+    Como el tile que queremos rellenar de mas a la derecha se encuentra fuera de la pantalla (20 tiles) sumo 21
+    */
+    tileX = ((*camera).scrollX>>3);
+    tileY = ((*camera).scrollY>>3)+19;
+    /**
+    El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
+    (Le sigue el 0, no el 33)
+    Es el motivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
+    */
+    tileYMod = tileY%32;
+
+    //18 son los tiles que entran en la pantalla en alto
+    /*
+    for(count = 0; count != 20; count++ ){
+        //Solo relleno el ultimo tile por la derecha
+        set_bkg_tiles(count, tileYMod, 1, 1, &(map+tileY));
+        //Incrementa con con el tamaño de X para que se cargue la proxima fila
+        tileY = tileY + 1;
+    }
+    */
+    tileX = tileX + (tileY*128);
+    set_bkg_tiles(0, tileYMod, 1, 1, &(map+tileX));
+}
+
 void main() {
 
     //Mierda temporal
@@ -628,9 +694,11 @@ void main() {
     UBYTE frame;
     UINT16 temp;
     UBYTE temp2;
+    UBYTE temp3;
     UBYTE count;
 
     UBYTE screenCountX;
+    UBYTE screenCountY;
 
     UBYTE isInGround;
 
@@ -680,6 +748,7 @@ void main() {
     temp = 0;
     frame = 0;
     screenCountX = 0;
+    screenCountY = 0;
 
     digitPoints[0] = 0;
     digitPoints[1] = 0;
@@ -726,9 +795,13 @@ void main() {
     */
 
     SWITCH_ROM_MBC1(2);//Banco de memoria 4
-    //Seria 32 pero solo quiero llenar la parte visible de la pantalla (144 pixels = 18 tiles)
-    for(count = 0; count != 18; count++ ){//18 son los tiles que entran en la pantalla en alto
 
+
+
+    //Seria 32 pero solo quiero llenar la parte visible de la pantalla (144 pixels = 18 tiles)
+    for(count = 0; count != 32; count++ ){//18 son los tiles que entran en la pantalla en alto
+
+        //Pinta una fila de tiles
         //El mapa maximo en memoria es 32 x 32
         //22 son los tiles que entran en la pantalla en ancho (160 pixels = 20 tiles)
         set_bkg_tiles(0, count, 22, 1, &(map+temp));
@@ -737,6 +810,8 @@ void main() {
 		temp = temp + MAP_SIZE_X;
 
     }
+
+    //set_bkg_tiles(0, 0, 22, 18, &map);
 
     SHOW_BKG;//Muestra el fondo
     //WIN se suporpone a BKG y usa sus mismos tiles, para dejar ver a BKG hay que moverla primero:
@@ -748,6 +823,7 @@ void main() {
     //Inicializacion del player y los enemigos
     player.x = (PLAYER_WIDTH>>1) INC_BITS;
     player.y = 0;
+    //camera.scrollY = (1*8);
     player.flip = FALSE;
     newX= player.x;
     newY = player.y;
@@ -846,11 +922,11 @@ void main() {
         }else{
             //Poner por defect a 1 y ralentizar la plataforma
             player.velocityAsc = 0;
+            player.velocityDesc += getGravitySpeed(GRAVITY, PLAYER_WEIGHT);
             /*
             Este ajuste se debe a que es aconsejable que la velocidad de caida sea superior
             a la velocidad de descenso de las plataformas móviles, que es de 1.
             */
-            player.velocityDesc += getGravitySpeed(GRAVITY, PLAYER_WEIGHT);
             if(player.velocityDesc < (2 INC_BITS)){
                 player.velocityDesc = (2 INC_BITS);
             }
@@ -922,8 +998,8 @@ void main() {
 
 
         //Set limits screen
-        if(player.x < (camera.scroll+1) INC_BITS){
-            player.x = ((camera.scroll+1) INC_BITS);
+        if(player.x < (camera.scrollX+1) INC_BITS){
+            player.x = ((camera.scrollX+1) INC_BITS);
         }
         else if((player.x DEC_BITS) + PLAYER_WIDTH >= LEVEL_WIDTH){
             player.x = (LEVEL_WIDTH - PLAYER_WIDTH) INC_BITS;
@@ -961,7 +1037,7 @@ void main() {
         //Bullet
         count = MAX_BULLET-1;
         do{
-            moveBullet(&camera, &bulletList[count], BULLET_WIDTH, BULLET_SPEED, map);
+            moveBullet(&camera, &bulletList[count], BULLET_WIDTH, BULLET_HEIGHT, BULLET_SPEED, map);
             if(bulletList[count].active){
                 if(checkPlayerDamage(&camera, &player, bulletList[count].x, bulletList[count].y, BULLET_WIDTH, BULLET_HEIGHT)){
                     bulletList[count].active = FALSE;
@@ -975,6 +1051,18 @@ void main() {
 
 
         wait_vbl_done();
+
+        /**
+        Actualizacion de la camara
+        */
+        //Actualizo los valores de la camara
+        camera.lastX = camera.scrollX;
+        camera.scrollX = getScrollX(player.x DEC_BITS, camera.scrollX);
+        screenCountX += (camera.scrollX-camera.lastX);
+        //
+        camera.lastY = camera.scrollY;
+        camera.scrollY = getScrollY(player.y, camera.scrollY);
+        screenCountY += (camera.scrollY-camera.lastY);
 
         /**
         Pintado enemigos
@@ -1016,84 +1104,34 @@ void main() {
         drawPlayer(&player, isInGround, frame);
         moveSpritePlayer(&camera, &player, isInGround, frame);
 
-        //Actualizo los valores de la camara
-        camera.lastX = camera.scroll;
-        camera.scroll = getScroll(player.x DEC_BITS, camera.scroll);
-        screenCountX += (camera.scroll-camera.lastX);
-
         //Movimiento del fondo
-        move_bkg(camera.scroll, 0);
+        move_bkg(camera.scrollX, camera.scrollY);
         //scroll_bkg(camera.scroll, 0);//Es automatico
         //Al avanzar un tile se actualiza el mapa
-        if(screenCountX == 8){
+        if(screenCountX >= 8){
         //if(screenCountX & 8){//Ocupa menos
+            screenCountX = (screenCountX - 8);
             showEnemy(&camera, &gochiList, MAX_GOCHI, gochiMapX, gochiMapY, NUMBER_GOCHI_MAP, GOCHI_WIDTH);
             showEnemy(&camera, &popoList, MAX_POPO, popoMapX, popoMapY, NUMBER_POPO_MAP, POPO_WIDTH);
             showEnemy(&camera, &babitList, MAX_BABIT, babitMapX, babitMapY, NUMBER_BABIT_MAP, BABIT_WIDTH);
-            screenCountX = 0;
+            moveBGX(&camera, map);
 
-            /**
-            Posiciona el indice X en la posicion del vector a rellenar
-            camera.scroll>>3 es la suma de tiles de 8x8 avanzados: camera.scroll/8
-            Ejemplo: el primer tile que se avance sera 1 + 21 = 22
-            Como el tile que queremos rellenar de mas a la derecha se encuentra fuera de la pantalla (20 tiles)
-            sumo 21
-            */
-            temp = (camera.scroll>>3)+21;
-            /**
-            El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
-            (Le sigue el 0, no el 33)
-            Es elmotivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
-            */
-            temp2 = temp % 32;
-            /*
-            //18 son los tiles que entran en la pantalla en alto
-            for(count = 0; count != 18; count++ ){
 
-                //Solo relleno el ultimo tile por la derecha
-                set_bkg_tiles(temp2, count, 1, 1, &(map+temp));
-
-                 //incrementa Cnt con el tamaño de X para que se cargue la proxima fila
-                temp = temp + MAP_SIZE_X;
-            }
-            */
-            //Mierda para ahorrar memoria
-            count = 18;
-            do{
-                set_bkg_tiles(temp2, 18-count, 1, 1, &(map+temp));
-                temp = temp + MAP_SIZE_X;
-            }while(count--);
         }
-        /*
-        else if(screenCountX == -8){
-            screenCountX = 0;
-
-            //Como el tile que queremos rellenar de mas a la izquierda se encuentra fuera de la pantalla resto -1
-
-            temp = (camera.scroll>>3)-1;
-
-            //El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
-            //(Le sigue el 0, no el 33)
-            //Es elmotivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
-
-            temp2 = temp % 32;
-            //18 son los tiles que entran en la pantalla en alto
-            for(count = 0; count != 18; count++ ){
-
-                //Solo relleno el ultimo tile por la derecha
-                set_bkg_tiles(temp2, count, 1, 1, &(map+temp));
-
-                 //incrementa Cnt con el tamaño de X para que se cargue la proxima fila
-                temp = temp + MAP_SIZE_X;
-            }
+        if(screenCountY >= 8){
+            screenCountY = 0;//(screenCountY-8);
+            //moveBGY(&camera, map);
         }
-        */
+        else if(screenCountY <= -8){
+            screenCountY = 0;
+        }
+
+
     //Solo refresco cada 30 frames
-
     //move_win(0, 136);
-    if(frame%30 == 0){
-        drawPoints(platformList[0].y, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
-     }
+    if(frame%10 == 0){
+        drawPoints(camera.scrollY, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+    }
 
     frame++;
 

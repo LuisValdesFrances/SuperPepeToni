@@ -11,9 +11,11 @@ UINT8 getDigit(UINT16 number, UINT8 digit);
 
 UBYTE blink01(UBYTE value);
 
-UINT16 getScroll(UINT16 objX, UINT16 scrollX);
+UINT16 getScrollX(UINT16 objX, UINT16 scrollX);
 
-UBYTE isInScreen(UINT16 scrollX, UINT16 x, UINT16 width);
+UINT16 getScrollY(UINT16 objY, UINT16 scrollY);
+
+UBYTE isInScreen(UINT16 scrollX, UINT16 scrollY, UINT16 x, UINT16 y, UINT16 width, UINT16 height);
 
 UBYTE getFrameIdle(UBYTE gameFrame, UBYTE characterFrame, UBYTE speed);
 

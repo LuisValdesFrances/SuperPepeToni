@@ -6,19 +6,29 @@ const UBYTE platformLevel_1_X[] = {
 };
 
 const UBYTE platformLevel_1_Y[] = {
-    8, 8, 0, 0, 0, 0, 0, 0, 0, 0
+    20, 20, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+//Up-Down
 const UBYTE platformLevel_1_Path[] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+/*
 UBYTE gochiLevel_1_X[] = {
     27, 70, 100, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE gochiLevel_1_Y[] = {
-    11, 11, 14, 0, 0, 0, 0, 0, 0, 0
+    25, 25, 28, 0, 0, 0, 0, 0, 0, 0
+};
+*/
+UBYTE gochiLevel_1_X[] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+UBYTE gochiLevel_1_Y[] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE popoLevel_1_X[] = {
@@ -26,7 +36,7 @@ UBYTE popoLevel_1_X[] = {
 };
 
 UBYTE popoLevel_1_Y[] = {
-    16, 16, 16, 0, 0, 0, 0, 0, 0, 0
+    30, 30, 30, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE babitLevel_1_X[] = {
@@ -34,6 +44,6 @@ UBYTE babitLevel_1_X[] = {
 };
 
 UBYTE babitLevel_1_Y[] = {
-    13, 4, 0, 0, 0, 0, 0, 0, 0, 0
+    27, 18, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
