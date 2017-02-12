@@ -38,6 +38,7 @@ UINT8 getNumberDigits(UINT16 number, UINT8 c) {
         return getNumberDigits(number, c);
     }
 }
+
 UINT8 getDigit(UINT16 number, UINT8 digit) {
 
     if(digit >= getNumberDigits(number, 0)) {
@@ -63,35 +64,45 @@ UBYTE blink01(UBYTE value){
 }
 
 UINT16 getScrollX(UINT16 objX, UINT16 scrollX) {
-
-    //La camara se mueve cuando se pasa de la mitad de la pantalla
-    //La segunda condicion evita que se mueva hacia la izquierda
-    if(objX > SCREEN_WIDTH4 && objX > scrollX + SCREEN_WIDTH4){
-
-        if(objX < LEVEL_WIDTH - SCREEN_WIDTH4*3){
-            return objX - SCREEN_WIDTH4;
-        }
-        else{
-            return LEVEL_WIDTH - SCREEN_WIDTH;
-        }
-    }else{
-        return scrollX;
+    UINT16 scX;
+    scX = 0;
+    /*
+    La camara se mueve cuando se pasa de la mitad de la pantalla
+    La segunda condicion evita que se mueva hacia la izquierda
+    */
+    if(objX > SCREEN_WIDTH4){
+        scX = objX - SCREEN_WIDTH4;
     }
+    //Limites
+    if(objX < SCREEN_WIDTH4){
+        scX = 0;
+    }
+    else if(scX > LEVEL_WIDTH - SCREEN_WIDTH){
+        scX = LEVEL_WIDTH - SCREEN_WIDTH;
+    }
+
+    //Evita que pueda retroceder
+    if(scX < scrollX){
+       scX = scrollX;
+    }
+    return scX;
 }
 
 UINT16 getScrollY(UINT16 objY, UINT16 scrollY) {
-
+    UINT16 scY;
+    scY = 0;
     if(objY > SCREEN_HEIGHT4){
-        if(objY < LEVEL_HEIGHT - SCREEN_HEIGHT4*3){
-            return objY - SCREEN_HEIGHT4;
-        }
-        else{
-            return LEVEL_HEIGHT - SCREEN_HEIGHT;
-        }
+        scY = objY - SCREEN_HEIGHT4;
     }
-    else{
-        return scrollY;
+    //Limites
+    if(objY < SCREEN_HEIGHT4){
+        scY = 0;
     }
+    else if(scY > LEVEL_HEIGHT - SCREEN_HEIGHT){
+        scY = LEVEL_HEIGHT - SCREEN_HEIGHT;
+    }
+
+    return scY;
 }
 
 UBYTE isInScreen(UINT16 scrollX, UINT16 scrollY, UINT16 x, UINT16 y, UINT16 width, UINT16 height){

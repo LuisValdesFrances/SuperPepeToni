@@ -480,14 +480,14 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
 
             }
             else if((*player).state == STATE_ATACK){
-                if((*player).frame < 3){
+                if((*player).frame < 2){
                     //Cuerpo
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
                     //Piernas
                     set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
                     set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
                 }
-                else if((*player).frame < 9){
+                else if((*player).frame < 6){
                 //Atack frame 2
                     //Cabeza
                     set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_ATACK_F2_1);//Especial
@@ -498,7 +498,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                     //Piernas
                     set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
                 }
-                else if((*player).frame < 12){
+                else if((*player).frame < 8){
                     //Cuerpo
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
                     //Piernas
@@ -693,8 +693,6 @@ void main() {
     //Declaracion
     UBYTE frame;
     UINT16 temp;
-    UBYTE temp2;
-    UBYTE temp3;
     UBYTE count;
 
     UBYTE screenCountX;
