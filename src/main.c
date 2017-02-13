@@ -292,6 +292,15 @@ UBYTE updatePlatform(struct Platform *platformList[], struct Player *player, uns
             (*player).y = y - PLAYER_HEIGHT;
             (*player).velocityDesc = 0;
         }
+
+        y = checkCollisionUp(
+        (*player).x DEC_BITS, (*player).y, PLAYER_WIDTH, x<<3, p->y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+        if(y){
+            //result = TRUE;
+            (*player).y = y;
+            (*player).velocityAsc = 0;
+        }
+
     }while(i--);
 
     return result;
@@ -620,26 +629,24 @@ void showEnemy(
     }
 }
 
-void moveBGX(struct Camera *camera, unsigned char *map){
+
+void drawBGX(struct Camera *camera, unsigned char *map){
+
     UINT16 tileX;
-    UINT16 indexXY;
     UBYTE tileXMod;
     UBYTE count;
-    UBYTE tileY;
+    //Posiciona el indice X en la posicion del vector a rellenar
+    //camera.scroll>>3 es la suma de tiles de 8x8 avanzados: camera.scroll/8
+    //Ejemplo: el primer tile que se avance sera 1 + 21 = 22
+    //Como el tile que queremos rellenar de mas a la derecha se encuentra fuera de la pantalla (20 tiles) sumo 21
 
-    /**
-    Posiciona el indice X en la posicion del vector a rellenar
-    camera.scroll>>3 es la suma de tiles de 8x8 avanzados: camera.scroll/8
-    Ejemplo: el primer tile que se avance sera 1 + 21 = 22
-    Como el tile que queremos rellenar de mas a la derecha se encuentra fuera de la pantalla (20 tiles) sumo 21
-    */
     tileX = ((*camera).scrollX>>3)+21;
 
-    /**
-    El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
-    (Le sigue el 0, no el 33)
-    Es el motivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
-    */
+
+    //El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
+    //(Le sigue el 0, no el 33)
+    //Es el motivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
+
     tileXMod = tileX%32;
 
     //18 son los tiles que entran en la pantalla en alto
@@ -649,40 +656,74 @@ void moveBGX(struct Camera *camera, unsigned char *map){
         //Incrementa con con el tamaño de X para que se cargue la proxima fila
         tileX = tileX + MAP_SIZE_X;
     }
-}
 
-void moveBGY(struct Camera *camera, unsigned char *map){
+    /*
+    UINT16 count;
     UINT16 tileX;
-    UINT16 tileY;
-    UBYTE tileYMod;
-    UBYTE count;
-    /**
-    Posiciona el indice X en la posicion del vector a rellenar
-    camera.scroll>>3 es la suma de tiles de 8x8 avanzados: camera.scroll/8
-    Ejemplo: el primer tile que se avance sera 1 + 21 = 22
-    Como el tile que queremos rellenar de mas a la derecha se encuentra fuera de la pantalla (20 tiles) sumo 21
-    */
-    tileX = ((*camera).scrollX>>3);
-    tileY = ((*camera).scrollY>>3)+19;
-    /**
-    El modulo se debe a que una vez superados los 32 tiles (32*8=256) la cuenta se reseta a 0
-    (Le sigue el 0, no el 33)
-    Es el motivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
-    */
-    tileYMod = tileY%32;
+    UINT16 indXY;
+    UINT16 indY;
+
+    tileX = ((*camera).scrollX>>3)+21;
+
+    indY = ((*camera).scrollY>>3);
+    indXY = (indY * MAP_SIZE_X);
+
 
     //18 son los tiles que entran en la pantalla en alto
-    /*
-    for(count = 0; count != 20; count++ ){
+    for(count = indY; count != (20+indY); count++ ){
         //Solo relleno el ultimo tile por la derecha
-        set_bkg_tiles(count, tileYMod, 1, 1, &(map+tileY));
+        set_bkg_tiles((tileX%32), count, 1, 1, &(map+tileX+indXY));
+
         //Incrementa con con el tamaño de X para que se cargue la proxima fila
-        tileY = tileY + 1;
+        tileX = tileX + MAP_SIZE_X;
     }
     */
-    tileX = tileX + (tileY*128);
-    set_bkg_tiles(0, tileYMod, 1, 1, &(map+tileX));
 }
+
+void drawBGYUp(struct Camera *camera, unsigned char *map){
+    /*
+    UINT16 count;
+    UINT16 tileY;
+    UINT16 indXY;
+    UINT16 indX;
+
+    tileY = ((*camera).scrollY>>3)+19;
+
+    indX = ((*camera).scrollX>>3);
+    indXY = indX + (tileY * MAP_SIZE_X);
+
+    //20 son los tiles que entran en la pantalla en ancho
+    for(count = indX; count != (22+indX); count++ ){
+        //Solo relleno el ultimo tile por la derecha
+        set_bkg_tiles((count%32), (tileY%32), 1, 1, &(map+indXY));
+        //Incrementa con con el tamaño de X para que se cargue la proxima fila
+        indXY = indXY + 1;
+    }
+    */
+}
+
+void drawBGYDown(struct Camera *camera, unsigned char *map){
+    /*
+    UINT16 count;
+    UINT16 tileY;
+    UINT16 indXY;
+    UINT16 indX;
+
+    tileY = ((*camera).scrollY>>3)-1;
+
+    indX = ((*camera).scrollX>>3);
+    indXY = indX + (tileY * MAP_SIZE_X);
+
+    //20 son los tiles que entran en la pantalla en ancho
+    for(count = indX; count != (22+indX); count++ ){
+        //Solo relleno el ultimo tile por la derecha
+        set_bkg_tiles((count%32), (tileY%32), 1, 1, &(map+indXY));
+        //Incrementa con con el tamaño de X para que se cargue la proxima fila
+        indXY = indXY + 1;
+    }
+    */
+}
+
 
 void main() {
 
@@ -695,8 +736,8 @@ void main() {
     UINT16 temp;
     UBYTE count;
 
-    UBYTE screenCountX;
-    UBYTE screenCountY;
+    BYTE screenCountX;
+    BYTE screenCountY;
 
     UBYTE isInGround;
 
@@ -746,7 +787,7 @@ void main() {
     temp = 0;
     frame = 0;
     screenCountX = 0;
-    screenCountY = 0;
+    screenCountY = 16;
 
     digitPoints[0] = 0;
     digitPoints[1] = 0;
@@ -795,7 +836,10 @@ void main() {
     SWITCH_ROM_MBC1(2);//Banco de memoria 4
 
 
-
+    /**
+    Relleneo de tiles desde la parte superior izquierda la pantalla de tiles, todos los
+    que quepan en x, y mas dos mas de margen (x-> 160/8 = 20 + 2 y-> 144/8 = 18 + 2)
+    */
     //Seria 32 pero solo quiero llenar la parte visible de la pantalla (144 pixels = 18 tiles)
     for(count = 0; count != 32; count++ ){//18 son los tiles que entran en la pantalla en alto
 
@@ -928,7 +972,14 @@ void main() {
             if(player.velocityDesc < (2 INC_BITS)){
                 player.velocityDesc = (2 INC_BITS);
             }
-            newY += (player.velocityDesc DEC_BITS);
+            /*
+            Este otro ajuste se debe a que si la velocidad de caida es muy elevada,
+            puede romper las colisiones
+            */
+            if(player.velocityDesc > (6 INC_BITS)){
+                player.velocityDesc = (6 INC_BITS);
+            }
+            newY +=(player.velocityDesc DEC_BITS);
         }
 
         /**
@@ -1059,7 +1110,7 @@ void main() {
         screenCountX += (camera.scrollX-camera.lastX);
         //
         camera.lastY = camera.scrollY;
-        camera.scrollY = getScrollY(player.y, camera.scrollY);
+        camera.scrollY = getScrollY(player.y);
         screenCountY += (camera.scrollY-camera.lastY);
 
         /**
@@ -1107,28 +1158,29 @@ void main() {
         //scroll_bkg(camera.scroll, 0);//Es automatico
         //Al avanzar un tile se actualiza el mapa
         if(screenCountX >= 8){
-        //if(screenCountX & 8){//Ocupa menos
             screenCountX = (screenCountX - 8);
             showEnemy(&camera, &gochiList, MAX_GOCHI, gochiMapX, gochiMapY, NUMBER_GOCHI_MAP, GOCHI_WIDTH);
             showEnemy(&camera, &popoList, MAX_POPO, popoMapX, popoMapY, NUMBER_POPO_MAP, POPO_WIDTH);
             showEnemy(&camera, &babitList, MAX_BABIT, babitMapX, babitMapY, NUMBER_BABIT_MAP, BABIT_WIDTH);
-            moveBGX(&camera, map);
+            drawBGX(&camera, map);
 
 
         }
-        if(screenCountY >= 8){
-            screenCountY = 0;//(screenCountY-8);
-            //moveBGY(&camera, map);
+        if(screenCountY >= 24){
+            screenCountY = (16 + (screenCountY-24));
+            drawBGYUp(&camera, map);
         }
-        else if(screenCountY <= -8){
-            screenCountY = 0;
+        else if(screenCountY <= 8){
+            screenCountY = (16 - (8-screenCountY));
+             drawBGYDown(&camera, map);
         }
+
 
 
     //Solo refresco cada 30 frames
     //move_win(0, 136);
     if(frame%10 == 0){
-        drawPoints(camera.scrollY, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+        drawPoints(screenCountY, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
     }
 
     frame++;

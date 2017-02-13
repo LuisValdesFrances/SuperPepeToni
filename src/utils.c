@@ -88,7 +88,7 @@ UINT16 getScrollX(UINT16 objX, UINT16 scrollX) {
     return scX;
 }
 
-UINT16 getScrollY(UINT16 objY, UINT16 scrollY) {
+UINT16 getScrollY(UINT16 objY) {
     UINT16 scY;
     scY = 0;
     if(objY > SCREEN_HEIGHT4){
@@ -143,7 +143,7 @@ UBYTE checkCollision(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBYTE y
 
 /**
 Chequea si el objeto 1 colisiona por debajo sobre el objeto 2
-Develve la posicion y del objeto 2 si colisiona.0 en cualquier otro caso
+Develve la posicion y del objeto 2 si colisiona. 0 en cualquier otro caso
 */
 UBYTE checkCollisionDown(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2){
     if(x1 + w1 > x2 && x1 < x2 + w2){
@@ -156,7 +156,7 @@ UBYTE checkCollisionDown(UINT16 x1, UBYTE y1, UBYTE w1, UBYTE h1, UINT16 x2, UBY
 
 /**
 Chequea si el objeto 1 colisiona por arriba sobre el objeto 2
-Develve la posicion y del objeto 1 si colisiona.0 en cualquier otro caso
+Develve la posicion y del objeto 1 si colisiona. 0 en cualquier otro caso
 */
 UBYTE checkCollisionUp(UINT16 x1, UBYTE y1, UBYTE w1, UINT16 x2, UBYTE y2, UBYTE w2, UBYTE h2){
     if(x1 + w1 > x2 && x1 < x2 + w2){
