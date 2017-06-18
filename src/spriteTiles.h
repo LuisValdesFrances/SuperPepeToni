@@ -34,8 +34,12 @@
 #define TILE_PLAYER_ATACK_F2_2 29
 #define TILE_PLAYER_ATACK_F2_3 30
 #define TILE_PLAYER_ATACK_F2_4 31
+#define TILE_PLAYER_ATACK_AIR_1 32
+#define TILE_PLAYER_ATACK_AIR_2 33
+#define TILE_PLAYER_ATACK_AIR_3 34
+#define TILE_PLAYER_ATACK_AIR_4 35
 
-#define TILE_POPO_F1 32
+#define TILE_POPO_F1 38
 #define TILE_POPO_F2 TILE_POPO_F1 +1
 
 #define TILE_GOCHI_1_F1 40
@@ -84,8 +88,8 @@
 #define TILE_PLATFORM_3 TILE_PLATFORM_2 +1
 #define TILE_PLATFORM_4 TILE_PLATFORM_3 +1
 
-#define TILE_BLANK 34
-#define TOTAL_TILES 81 //Total + 2
+#define TILE_BLANK 126
+#define TOTAL_TILES 128 //Total + 2
 
 //SPRITE
 #define SPRITE_DIGIT_1 1
@@ -103,10 +107,10 @@
 #define SPRITE_PLAYER_4 SPRITE_PLAYER_3 + 1
 #define SPRITE_PLAYER_5 SPRITE_PLAYER_4 + 1
 #define SPRITE_PLAYER_6 SPRITE_PLAYER_5 + 1
-#define SPRITE_PLAYER_7 SPRITE_PLAYER_6 + 1
-#define SPRITE_PLAYER_8 SPRITE_PLAYER_7 + 1
-#define SPRITE_PLAYER_9 SPRITE_PLAYER_8 + 1//Especial atack
-#define SPRITE_PLAYER_10 SPRITE_PLAYER_9 + 1//Especial atack
+#define SPRITE_PLAYER_7 SPRITE_PLAYER_6 + 1//Especial atack air
+#define SPRITE_PLAYER_8 SPRITE_PLAYER_7 + 1//Especial atack air
+#define SPRITE_PLAYER_9 SPRITE_PLAYER_8 + 1//Especial atack suelo-air
+#define SPRITE_PLAYER_10 SPRITE_PLAYER_9 + 1//Especial atack suelo-air
 //Enemy Popo animations
 #define SPRITE_ENEMY_8X8_1 SPRITE_PLAYER_10 +1//Popo
 

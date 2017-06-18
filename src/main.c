@@ -78,11 +78,29 @@ UBYTE checkPlayerDamage(struct Camera *camera, struct Player *player, UINT16 ene
     return FALSE;
 }
 
-void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy *enemy, UBYTE enemyW, UBYTE enemyH){
+void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy *enemy, BYTE isInGround, UBYTE enemyW, UBYTE enemyH){
     UINT16 temp;
+    UBYTE frameDamage;
     if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*enemy).x DEC_BITS), (*enemy).y, enemyW, enemyH)){
         if((*enemy).expCount == 0){
-            if((*player).frame > 3 && (*player).frame < 9){
+
+            //Dependiendo de si es una patada o un puñetazo, el frame que causa daño es uno u otro
+            if(isInGround){
+                if((*player).frame > 3 && (*player).frame < 9){
+                    frameDamage = TRUE;
+                }else{
+                    frameDamage = FALSE;
+                }
+            }else{
+                if((*player).frame > 0){
+                    frameDamage = TRUE;
+                }else{
+                    frameDamage = FALSE;
+                }
+            }
+
+
+            if(frameDamage == TRUE){
 
                 temp = ((*player).x DEC_BITS) + PLAYER_WIDTH;
                 if((*player).flip){
@@ -148,12 +166,16 @@ void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE e
             }
 
             (*enemy).x = newX;
-        }else{
+
+        }
+        /*
+        else{
             //Si se ha quedado a la izquierda fuera del scroll, lo desactivo
             if(((*enemy).x DEC_BITS) + enemyW < (*camera).scrollX){
                 (*enemy).expCount = 4;
             }
         }
+        */
     }
 }
 
@@ -465,17 +487,29 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
         set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_HEAD_4);
         //Cuerpo
         set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
-        set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
-        //Tiles especiales reseteados a blanco
-        set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);//Especial(Sobreesale)
-        set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);//Especial(Sobreesale)
 
         if(!isInGround){
             //Piernas
-            set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
-            set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_JUMP_2);
+            if((*player).state == STATE_ATACK && (*player).frame < 6){
+                set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_AIR_1);
+                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_AIR_2);
+                set_sprite_tile(SPRITE_PLAYER_9, TILE_PLAYER_ATACK_AIR_3);
+                set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_AIR_4);
+            }
+            else{
+                set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
+                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
+                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_JUMP_2);
+                set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);
+                set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);
+            }
         }
         else{
+            set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
+            //Tiles especiales reseteados a blanco
+            set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);//Especial(Sobreesale)
+            set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);//Especial(Sobreesale)
+
             if((*player).state == STATE_RUN){
                 //Piernas
                 (*player).frame = getPlayerFrameRun(frame, (*player).frame);
@@ -553,9 +587,11 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
     }
     temp2 = 0;
     //Ñapa para la animacion idle (Muevo algunos sprites un pixel)
-    if((*player).state == STATE_IDLE){
-        (*player).frame = getFrameIdle(frame, (*player).frame, 15);
-        temp2 = (*player).frame;
+    if(isInGround){
+        if((*player).state == STATE_IDLE){
+            (*player).frame = getFrameIdle(frame, (*player).frame, 15);
+            temp2 = (*player).frame;
+        }
     }
     (*player).flip == FALSE;
 
@@ -584,6 +620,11 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
                 move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16-temp, (*player).y - (*camera).scrollY  +32);//ESPECIAL
                 move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8+temp, (*player).y - (*camera).scrollY  +40);//ESPECIAL
             }
+        }
+    }else{
+        if((*player).state == STATE_ATACK){
+            move_sprite(SPRITE_PLAYER_9, ((*player).x DEC_BITS) - (*camera).scrollX +24-(temp*3), (*player).y - (*camera).scrollY  +32);//ESPECIAL
+            move_sprite(SPRITE_PLAYER_10, ((*player).x DEC_BITS) - (*camera).scrollX +24-(temp*3), (*player).y - (*camera).scrollY  +40);//ESPECIAL
         }
     }
 }
@@ -630,7 +671,7 @@ void showEnemy(
 }
 
 
-void drawBGX(struct Camera *camera, unsigned char *map){
+void drawBGXRight(struct Camera *camera, unsigned char *map){
 
     UINT16 tileX;
     UBYTE tileXMod;
@@ -680,7 +721,22 @@ void drawBGX(struct Camera *camera, unsigned char *map){
     */
 }
 
-void drawBGYUp(struct Camera *camera, unsigned char *map){
+void drawBGXLeft(struct Camera *camera, unsigned char *map){
+
+    UINT16 tileX;
+    UBYTE tileXMod;
+    UBYTE count;
+
+    tileX = ((*camera).scrollX>>3)-1;
+    tileXMod = tileX%32;
+
+    for(count = 0; count != 32; count++ ){
+        set_bkg_tiles(tileXMod, count, 1, 1, &(map+tileX));
+        tileX = tileX + MAP_SIZE_X;
+    }
+}
+
+void drawBGYDown(struct Camera *camera, unsigned char *map){
     /*
     UINT16 count;
     UINT16 tileY;
@@ -702,7 +758,7 @@ void drawBGYUp(struct Camera *camera, unsigned char *map){
     */
 }
 
-void drawBGYDown(struct Camera *camera, unsigned char *map){
+void drawBGYUp(struct Camera *camera, unsigned char *map){
     /*
     UINT16 count;
     UINT16 tileY;
@@ -740,6 +796,7 @@ void main() {
     BYTE screenCountY;
 
     UBYTE isInGround;
+    UBYTE isLastInGround;
 
     unsigned char *map;
     UBYTE *gochiMapX;
@@ -774,6 +831,7 @@ void main() {
     keyA_Up = TRUE;
     keyA_Down = FALSE;
     isInGround = FALSE;
+    isLastInGround = FALSE;
 
     //Se carga el mapa correcto
     map = &LEVEL1;
@@ -786,7 +844,7 @@ void main() {
 
     temp = 0;
     frame = 0;
-    screenCountX = 0;
+    screenCountX = 16;
     screenCountY = 16;
 
     digitPoints[0] = 0;
@@ -993,15 +1051,29 @@ void main() {
         }
         if(keyPressLEFT(keys)) {
             if(player.state == STATE_IDLE || player.state == STATE_RUN || !isInGround){
+                if(!isInGround){
+                    //Si se gira en el aire pierde el ataque
+                    if(!isInGround && player.flip == FALSE){
+                        player.state = STATE_IDLE;
+                    }
+                }else{
+                    player.state = STATE_RUN;
+                }
                 player.flip = TRUE;
-                player.state = STATE_RUN;
                 newX -=  PLAYER_SPEED;
             }
         }
         else if(keyPressRIGHT(keys)) {
             if(player.state == STATE_IDLE || player.state == STATE_RUN || !isInGround){
+                if(!isInGround){
+                    //Si se gira en el aire pierde el ataque
+                    if(!isInGround && player.flip == TRUE){
+                        player.state = STATE_IDLE;
+                    }
+                }else{
+                    player.state = STATE_RUN;
+                }
                 player.flip = FALSE;
-                player.state = STATE_RUN;
                 newX +=  PLAYER_SPEED;
             }
         }
@@ -1011,7 +1083,7 @@ void main() {
             }
         }
         if(keyA_Down) {
-            if(isInGround && player.state != STATE_ATACK){
+            if(player.state != STATE_ATACK){
                 player.state = STATE_ATACK;
                 player.frame = 0;
             }
@@ -1061,7 +1133,7 @@ void main() {
         count = MAX_GOCHI-1;
         do{
             moveEnemy(&camera, &gochiList[count], GOCHI_WIDTH, GOCHI_HEIGHT, GOCHI_SPEED, map);
-            checkEnemyDamage(&camera, &player, &gochiList[count], GOCHI_WIDTH, GOCHI_HEIGHT);
+            checkEnemyDamage(&camera, &player, &gochiList[count], isInGround, GOCHI_WIDTH, GOCHI_HEIGHT);
             if(gochiList[count].expCount == 0){
                 checkPlayerDamage(&camera, &player, gochiList[count].x, gochiList[count].y, GOCHI_WIDTH, GOCHI_HEIGHT);
             }
@@ -1078,7 +1150,7 @@ void main() {
         count = MAX_POPO-1;
         do{
             moveEnemy(&camera, &babitList[count], BABIT_WIDTH, BABIT_HEIGHT, 0, map);
-            checkEnemyDamage(&camera, &player, &babitList[count], BABIT_WIDTH, BABIT_HEIGHT);
+            checkEnemyDamage(&camera, &player, &babitList[count], isInGround, BABIT_WIDTH, BABIT_HEIGHT);
             if(babitList[count].expCount == 0){
                 checkPlayerDamage(&camera, &player, babitList[count].x, babitList[count].y, BABIT_WIDTH, BABIT_HEIGHT);
             }
@@ -1096,7 +1168,15 @@ void main() {
 
         //Platform
         temp = updatePlatform(&platformList, &player, map);
-        isInGround = isCollisionDown(player.x DEC_BITS, player.y + 1, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, map) || temp;
+
+        //Cambio de suelo a aire
+        isLastInGround = isCollisionDown(player.x DEC_BITS, player.y + 1, PLAYER_WIDTH, PLAYER_HEIGHT, MAP_SIZE_X, map) || temp;
+        //En el frame anterior estaba en el suelo y ahora en el aire o viceversa
+        if(isInGround != isLastInGround){
+            isInGround = isLastInGround;
+            player.state = STATE_IDLE;
+            player.frame = 0;
+        }
 
 
         wait_vbl_done();
@@ -1157,30 +1237,36 @@ void main() {
         move_bkg(camera.scrollX, camera.scrollY);
         //scroll_bkg(camera.scroll, 0);//Es automatico
         //Al avanzar un tile se actualiza el mapa
-        if(screenCountX >= 8){
-            screenCountX = (screenCountX - 8);
+        if(screenCountX >= 24){
+            screenCountX = (16 + (screenCountX - 24));
             showEnemy(&camera, &gochiList, MAX_GOCHI, gochiMapX, gochiMapY, NUMBER_GOCHI_MAP, GOCHI_WIDTH);
             showEnemy(&camera, &popoList, MAX_POPO, popoMapX, popoMapY, NUMBER_POPO_MAP, POPO_WIDTH);
             showEnemy(&camera, &babitList, MAX_BABIT, babitMapX, babitMapY, NUMBER_BABIT_MAP, BABIT_WIDTH);
-            drawBGX(&camera, map);
-
-
+            drawBGXRight(&camera, map);
         }
+        else if(screenCountX <= 8){
+            screenCountX = (16 - (8-screenCountX));
+            showEnemy(&camera, &gochiList, MAX_GOCHI, gochiMapX, gochiMapY, NUMBER_GOCHI_MAP, GOCHI_WIDTH);
+            showEnemy(&camera, &popoList, MAX_POPO, popoMapX, popoMapY, NUMBER_POPO_MAP, POPO_WIDTH);
+            showEnemy(&camera, &babitList, MAX_BABIT, babitMapX, babitMapY, NUMBER_BABIT_MAP, BABIT_WIDTH);
+            drawBGXLeft(&camera, map);
+        }
+        /*
         if(screenCountY >= 24){
             screenCountY = (16 + (screenCountY-24));
-            drawBGYUp(&camera, map);
+            drawBGYDown(&camera, map);
         }
         else if(screenCountY <= 8){
             screenCountY = (16 - (8-screenCountY));
-             drawBGYDown(&camera, map);
+            drawBGYUp(&camera, map);
         }
-
+        */
 
 
     //Solo refresco cada 30 frames
     //move_win(0, 136);
     if(frame%10 == 0){
-        drawPoints(screenCountY, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+        drawPoints(screenCountX, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
     }
 
     frame++;

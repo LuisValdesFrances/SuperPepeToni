@@ -80,11 +80,6 @@ UINT16 getScrollX(UINT16 objX, UINT16 scrollX) {
     else if(scX > LEVEL_WIDTH - SCREEN_WIDTH){
         scX = LEVEL_WIDTH - SCREEN_WIDTH;
     }
-
-    //Evita que pueda retroceder
-    if(scX < scrollX){
-       scX = scrollX;
-    }
     return scX;
 }
 
