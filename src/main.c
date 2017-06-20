@@ -271,6 +271,11 @@ void drawPlatform(struct Camera *camera, struct Platform *platform, UBYTE count)
     x = x<<3;
     if((*platform).x != 0 && isInScreen((*camera).scrollX, (*camera).scrollY, x, (*platform).y, PLATFORM_WIDTH, PLATFORM_HEIGHT)){
         temp = count*4;//4 es el numero de tiles
+        //Puede que otro enemigo que usa los mismos sprites haya flipeado
+        set_sprite_prop(SPRITE_ENEMY_16X24_1 + temp, 0);
+        set_sprite_prop(SPRITE_ENEMY_16X24_2 + temp, 0);
+        set_sprite_prop(SPRITE_ENEMY_16X24_3 + temp, 0);
+        set_sprite_prop(SPRITE_ENEMY_16X24_4 + temp, 0);
         set_sprite_tile(SPRITE_ENEMY_16X24_1 + temp, TILE_PLATFORM_1);
         set_sprite_tile(SPRITE_ENEMY_16X24_2 + temp, TILE_PLATFORM_2);
         set_sprite_tile(SPRITE_ENEMY_16X24_3 + temp, TILE_PLATFORM_3);
@@ -436,6 +441,7 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bullet
             }
         }
     }else{
+        //Quitar esto de aqui para que puedan pintarse mas de un enemigo del mismo tipo simultaneo
         count2 = 11;
         do
         {
@@ -492,6 +498,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
             //Piernas
             if((*player).state == STATE_ATACK && (*player).frame < 6){
                 set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_AIR_1);
+                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
                 set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_AIR_2);
                 set_sprite_tile(SPRITE_PLAYER_9, TILE_PLAYER_ATACK_AIR_3);
                 set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_AIR_4);
@@ -504,6 +511,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                 set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);
             }
         }
+        //Player en el suelo
         else{
             set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
             //Tiles especiales reseteados a blanco
@@ -539,15 +547,19 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F2_3);//Especial
                     set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_F2_4);//Especial(Sobreesale)
                     //Piernas
+                    set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
                     set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
                 }
                 else if((*player).frame < 8){
                     //Cuerpo
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
                     //Piernas
+                    set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
                     set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
                 }
                 else{
+                    set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
+                    set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_FOOTS_2);
                     (*player).state = STATE_IDLE;
                     (*player).frame = 0;
                 }
