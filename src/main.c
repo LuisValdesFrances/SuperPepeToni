@@ -200,7 +200,7 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
     UBYTE temp;
     UBYTE count2;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT) && (*gochi).expCount != 4){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT) && (*gochi).expCount != 5){
         if((*gochi).expCount == 0){
             set_sprite_tile(SPRITE_ENEMY_16X24_1+temp, TILE_GOCHI_1_F1);
             set_sprite_tile(SPRITE_ENEMY_16X24_2+temp, TILE_GOCHI_2_F1);
@@ -218,28 +218,28 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
                 }else{
                     set_sprite_prop(SPRITE_ENEMY_16X24_1 + temp + 6-count2, 0);
                 }
-            }
-            while(count2--);
+            }while(count2--);
         }else{
-            set_sprite_tile(SPRITE_ENEMY_16X24_1+temp, TILE_EXP_1_F1 + (4*((*gochi).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_16X24_2+temp, TILE_EXP_2_F1 + (4*((*gochi).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_16X24_3+temp, TILE_EXP_3_F1 + (4*((*gochi).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_16X24_4+temp, TILE_EXP_4_F1 + (4*((*gochi).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_16X24_5+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_16X24_6+temp, TILE_BLANK);
+            if((*gochi).expCount < 4){
+                set_sprite_tile(SPRITE_ENEMY_16X24_1+temp, TILE_EXP_1_F1 + (4*((*gochi).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_16X24_2+temp, TILE_EXP_2_F1 + (4*((*gochi).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_16X24_3+temp, TILE_EXP_3_F1 + (4*((*gochi).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_16X24_4+temp, TILE_EXP_4_F1 + (4*((*gochi).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_16X24_5+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_16X24_6+temp, TILE_BLANK);
+            }else{
+                /*Estos sprites se usan tambien para la plataforma*/
+                count2 = 5;
+                do
+                {
+                    set_sprite_tile(SPRITE_ENEMY_16X24_1 + count2 + temp, TILE_BLANK);
+                }
+                while(count2--);
+            }
             if(frame%6==0){
                 (*gochi).expCount++;
             }
         }
-    }else{
-        /*Estos sprites se usan tambien para la plataforma*/
-        count2 = 5;
-        do
-        {
-            set_sprite_tile(SPRITE_ENEMY_16X24_1 + count2 + temp, TILE_BLANK);
-        }
-        while(count2--);
-
     }
 }
 
@@ -247,7 +247,8 @@ void moveSpriteGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count){
     UBYTE temp;
     UBYTE temp2;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT)
+       && (*gochi).expCount != 5){
 
         if((*gochi).flip){
             temp2 = 8;
@@ -397,7 +398,15 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bullet
     UBYTE temp;
     UBYTE count2;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*babit).x DEC_BITS), (*babit).y, BABIT_WIDTH, BABIT_HEIGHT) && (*babit).expCount != 4){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*babit).x DEC_BITS), (*babit).y, BABIT_WIDTH, BABIT_HEIGHT)
+       && (*babit).expCount != 5){
+
+        //Giro al personaje
+        count2 = 11;
+        do{
+            set_sprite_prop(SPRITE_ENEMY_16X24_1 + count2 + temp, 0);
+        }while(count2--);
+
         if((*babit).expCount == 0){
             set_sprite_tile(SPRITE_ENEMY_24X32_1+temp, TILE_BABIT_1_F1);
             set_sprite_tile(SPRITE_ENEMY_24X32_2+temp, TILE_BABIT_2_F1);
@@ -423,38 +432,46 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bullet
                     showBullet(bulletList, maxBullet, (*babit).x - (7 INC_BITS), (*babit).y + 6);
                 }
             }
-
         }else{
-            set_sprite_tile(SPRITE_ENEMY_24X32_1+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_24X32_2+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_24X32_3+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_24X32_4+temp, TILE_EXP_1_F1 + (4*((*babit).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_24X32_5+temp, TILE_EXP_2_F1 + (4*((*babit).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_24X32_6+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_24X32_7+temp, TILE_EXP_3_F1 + (4*((*babit).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_24X32_8+temp, TILE_EXP_4_F1 + (4*((*babit).expCount-1)));
-            set_sprite_tile(SPRITE_ENEMY_24X32_9+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_24X32_10+temp, TILE_BLANK);
-            set_sprite_tile(SPRITE_ENEMY_24X32_11+temp, TILE_BLANK);
+            /*
+            expCount 1 -> Se pinta frame 1 explosion
+            expCount 2 -> Se pinta frame 2 explosion
+            expCount 3 -> Se pinta frame 3 explosion
+            expCount 4 -> Se Se borran los frames
+            */
+            if((*babit).expCount < 4){
+
+                set_sprite_tile(SPRITE_ENEMY_24X32_1+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_24X32_2+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_24X32_3+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_24X32_4+temp, TILE_EXP_1_F1 + (4*((*babit).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_24X32_5+temp, TILE_EXP_2_F1 + (4*((*babit).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_24X32_6+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_24X32_7+temp, TILE_EXP_3_F1 + (4*((*babit).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_24X32_8+temp, TILE_EXP_4_F1 + (4*((*babit).expCount-1)));
+                set_sprite_tile(SPRITE_ENEMY_24X32_9+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_24X32_10+temp, TILE_BLANK);
+                set_sprite_tile(SPRITE_ENEMY_24X32_11+temp, TILE_BLANK);
+            //Ha terminado la explosion
+            }else{
+                count2 = 11;
+                do{
+                    set_sprite_tile(SPRITE_ENEMY_24X32_1 + count2 + temp, TILE_BLANK);
+                }while(count2--);
+            }
+
             if(frame%6==0){
                 (*babit).expCount++;
             }
         }
-    }else{
-        //Quitar esto de aqui para que puedan pintarse mas de un enemigo del mismo tipo simultaneo
-        count2 = 11;
-        do
-        {
-            set_sprite_tile(SPRITE_ENEMY_24X32_1 + count2 + temp, TILE_BLANK);
-        }
-        while(count2--);
     }
 }
 
 void moveSpriteBabit(struct Camera *camera, struct Enemy *babit, UBYTE count){
     UBYTE temp;
     temp = count*11;//11 es el numero de sprites
-    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*babit).x DEC_BITS), (*babit).y, BABIT_WIDTH, BABIT_HEIGHT)){
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*babit).x DEC_BITS), (*babit).y, BABIT_WIDTH, BABIT_HEIGHT)
+       && (*babit).expCount != 5){
 
         move_sprite(SPRITE_ENEMY_24X32_1+temp,((*babit).x DEC_BITS) - (*camera).scrollX +16, ((*babit).y) - (*camera).scrollY  +16);
         move_sprite(SPRITE_ENEMY_24X32_2+temp,((*babit).x DEC_BITS) - (*camera).scrollX +24, ((*babit).y) - (*camera).scrollY  +16);
@@ -667,7 +684,7 @@ void showEnemy(
                 //Accedo a un puntero que apunta a un vector de structs
                 e = &enemyList[j];
 
-                if(e->expCount == 4){
+                if(e->expCount == 5){
                     e->x = posX INC_BITS;
                     e->y = posY;
                     e->frame = 0;
@@ -951,17 +968,17 @@ void main() {
     while(count--);
     count = MAX_GOCHI-1;
     do{
-        gochiList[count].expCount = 4;
+        gochiList[count].expCount = 5;
     }
     while(count--);
     count = MAX_POPO-1;
     do{
-        popoList[count].expCount = 4;
+        popoList[count].expCount = 5;
     }
     while(count--);
     count = MAX_BABIT-1;
     do{
-        babitList[count].expCount = 4;
+        babitList[count].expCount = 5;
     }
     while(count--);
     count = MAX_BULLET-1;
@@ -1107,7 +1124,6 @@ void main() {
 
         }
 
-
         /**
         Colisiones player
         */
@@ -1230,8 +1246,7 @@ void main() {
         }
         /*
         La plataforma usa los mismos sprites que el Gochi, por esto mismo se debe de pintar despues
-        de este. El Gochi pone los sprites que no usa en color blanco, por lo que si se pinta este
-        despues que la plataforma cambiara sus sprites.
+        de este.
         */
         //Platform
         for(count = 0; count < NUMBER_PLATFORM_MAP; count++){
