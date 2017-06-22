@@ -59,8 +59,9 @@
 //Player states
 #define STATE_UNACTIVE 0
 #define STATE_IDLE 1
-#define STATE_RUN 2
-#define STATE_ATACK 3
+#define STATE_DOWN 2
+#define STATE_RUN 3
+#define STATE_ATACK 4
 
 #define SUFF_COUNT 50
 

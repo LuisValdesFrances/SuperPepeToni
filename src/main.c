@@ -34,6 +34,7 @@ struct Player {
     UBYTE state;
     UBYTE frame;
     UBYTE suffCount;
+    UBYTE airAtack;
 };
 
 struct Enemy {
@@ -85,33 +86,38 @@ void checkEnemyDamage(struct Camera *camera, struct Player *player, struct Enemy
         if((*enemy).expCount == 0){
 
             //Dependiendo de si es una patada o un puñetazo, el frame que causa daño es uno u otro
-            if(isInGround){
-                if((*player).frame > 3 && (*player).frame < 9){
-                    frameDamage = TRUE;
+            if((*player).state == STATE_ATACK){
+                if(isInGround){
+                    if((*player).frame > 3 && (*player).frame < 9){
+                        frameDamage = TRUE;
+                    }else{
+                        frameDamage = FALSE;
+                    }
                 }else{
-                    frameDamage = FALSE;
+                    if((*player).frame > 0){
+                        frameDamage = TRUE;
+                    }else{
+                        frameDamage = FALSE;
+                    }
                 }
-            }else{
-                if((*player).frame > 0){
-                    frameDamage = TRUE;
-                }else{
-                    frameDamage = FALSE;
-                }
-            }
 
 
-            if(frameDamage == TRUE){
+                if(frameDamage == TRUE){
 
-                temp = ((*player).x DEC_BITS) + PLAYER_WIDTH;
-                if((*player).flip){
-                    temp = ((*player).x DEC_BITS) - (PLAYER_WIDTH>>1);
-                }
-                if(
-                    checkCollision(
-                    temp, (*player).y, (PLAYER_WIDTH>>1), PLAYER_HEIGHT,
-                    ((*enemy).x DEC_BITS), (*enemy).y, enemyW, enemyH)){
+                    temp = ((*player).x DEC_BITS) + PLAYER_WIDTH;
+                    if((*player).flip){
+                        temp = ((*player).x DEC_BITS) - (PLAYER_WIDTH>>1);
+                    }
+                    if(
+                        checkCollision(
+                        temp, (*player).y, (PLAYER_WIDTH>>1), PLAYER_HEIGHT,
+                        ((*enemy).x DEC_BITS), (*enemy).y, enemyW, enemyH)){
 
-                        (*enemy).expCount = 1;
+                            (*enemy).expCount = 1;
+
+                            //Si ha pegado una patada voladora, desactivo el ataque
+                            (*player).state = STATE_IDLE;
+                    }
                 }
             }
         }
@@ -429,7 +435,7 @@ void drawBabit(struct Camera *camera, struct Enemy *babit, struct Bullet *bullet
                 if((*babit).frame == 50){
                    (*babit).frame = 0;
                     //Disparo
-                    showBullet(bulletList, maxBullet, (*babit).x - (7 INC_BITS), (*babit).y + 6);
+                    showBullet(bulletList, maxBullet, (*babit).x - (7 INC_BITS), (*babit).y + 3);
                 }
             }
         }else{
@@ -508,12 +514,11 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
         set_sprite_tile(SPRITE_PLAYER_2, TILE_PLAYER_HEAD_2);
         set_sprite_tile(SPRITE_PLAYER_3, TILE_PLAYER_HEAD_3);
         set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_HEAD_4);
-        //Cuerpo
-        set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
 
         if(!isInGround){
             //Piernas
             if((*player).state == STATE_ATACK && (*player).frame < 6){
+                set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
                 set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_AIR_1);
                 set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
                 set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_AIR_2);
@@ -521,6 +526,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                 set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_AIR_4);
             }
             else{
+                set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
                 set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
                 set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
                 set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_JUMP_2);
@@ -530,6 +536,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
         }
         //Player en el suelo
         else{
+            set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
             set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
             //Tiles especiales reseteados a blanco
             set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);//Especial(Sobreesale)
@@ -547,9 +554,19 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                 set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_FOOTS_2);
 
             }
+            else if((*player).state == STATE_DOWN){
+                set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_DOWN_1);
+                set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_BODY_2);
+                set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_JUMP_1);
+                set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_JUMP_2);
+                set_sprite_tile(SPRITE_PLAYER_9, TILE_BLANK);
+                set_sprite_tile(SPRITE_PLAYER_10, TILE_BLANK);
+            }
             else if((*player).state == STATE_ATACK){
+
                 if((*player).frame < 2){
                     //Cuerpo
+                    set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
                     //Piernas
                     set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
@@ -561,6 +578,7 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                     set_sprite_tile(SPRITE_PLAYER_4, TILE_PLAYER_ATACK_F2_1);//Especial
                     set_sprite_tile(SPRITE_PLAYER_9, TILE_PLAYER_ATACK_F2_2);//Especial(Sobreesale)
                     //Cuerpo
+                    set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F2_3);//Especial
                     set_sprite_tile(SPRITE_PLAYER_10, TILE_PLAYER_ATACK_F2_4);//Especial(Sobreesale)
                     //Piernas
@@ -569,12 +587,14 @@ void drawPlayer(struct Player *player, UBYTE isInGround, UBYTE frame){
                 }
                 else if((*player).frame < 8){
                     //Cuerpo
+                    set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
                     set_sprite_tile(SPRITE_PLAYER_6, TILE_PLAYER_ATACK_F1_1);//Especial
                     //Piernas
                     set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
                     set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_ATACK_F1_2);//Especial
                 }
                 else{
+                    set_sprite_tile(SPRITE_PLAYER_5, TILE_PLAYER_BODY_1);
                     set_sprite_tile(SPRITE_PLAYER_7, TILE_PLAYER_FOOTS_1);
                     set_sprite_tile(SPRITE_PLAYER_8, TILE_PLAYER_FOOTS_2);
                     (*player).state = STATE_IDLE;
@@ -607,6 +627,7 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
     UBYTE temp;
     UBYTE temp2;
 
+
     if((*player).flip){
         flipPlayer(S_FLIPX);
         temp = 8;
@@ -625,18 +646,14 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
     (*player).flip == FALSE;
 
     //Coloco los sprites en su posicion
-    move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +16 +temp2);
-    move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +16 +temp2);
-    move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +24 +temp2);
-    move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +24 +temp2);
-    move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +32 +temp2);
-    move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32 +temp2);
-    move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40);
-    move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +40);
-
     if(isInGround){
 
         if((*player).state == STATE_ATACK){
+                move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +16 +temp2);
+                move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +16 +temp2);
+                move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +24 +temp2);
+                move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +24 +temp2);
+                move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +32 +temp2);
             if((*player).frame < 3){
                 move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32);//ESPECIAL
                 move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40);//ESPECIAL
@@ -650,7 +667,35 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
                 move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8+temp, (*player).y - (*camera).scrollY  +40);//ESPECIAL
             }
         }
+        //Le agacho un poco la cabeza
+        else if((*player).state == STATE_DOWN){
+            move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +16 +8);
+            move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +16 +8);
+            move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +24 +8);
+            move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +24 +8);
+            move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +32 +6);
+            move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32 +6);
+            move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40+6);
+            move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +40+6);
+        }else{
+            move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +16 +temp2);
+            move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +16 +temp2);
+            move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +24 +temp2);
+            move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +24 +temp2);
+            move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +32 +temp2);
+            move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32 +temp2);
+            move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40);
+            move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +40);
+        }
     }else{
+        move_sprite(SPRITE_PLAYER_1, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +16);
+        move_sprite(SPRITE_PLAYER_2, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +16);
+        move_sprite(SPRITE_PLAYER_3, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +24);
+        move_sprite(SPRITE_PLAYER_4, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +24);
+        move_sprite(SPRITE_PLAYER_5, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +32);
+        move_sprite(SPRITE_PLAYER_6, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +32);
+        move_sprite(SPRITE_PLAYER_7, ((*player).x DEC_BITS) - (*camera).scrollX +8 +temp, (*player).y - (*camera).scrollY +40);
+        move_sprite(SPRITE_PLAYER_8, ((*player).x DEC_BITS) - (*camera).scrollX +16 -temp, (*player).y - (*camera).scrollY +40);
         if((*player).state == STATE_ATACK){
             move_sprite(SPRITE_PLAYER_9, ((*player).x DEC_BITS) - (*camera).scrollX +24-(temp*3), (*player).y - (*camera).scrollY  +32);//ESPECIAL
             move_sprite(SPRITE_PLAYER_10, ((*player).x DEC_BITS) - (*camera).scrollX +24-(temp*3), (*player).y - (*camera).scrollY  +40);//ESPECIAL
@@ -1074,11 +1119,15 @@ void main() {
         */
         if(keyPressSTART(keys)){}
         if(keyPressSELECT(keys)){}
+        //Pad
         if(keyPressUP(keys)) {
         }
         else if(keyPressDOWN(keys)) {
+            if(player.state != STATE_ATACK && isInGround){
+                player.state = STATE_DOWN;
+            }
         }
-        if(keyPressLEFT(keys)) {
+        else if(keyPressLEFT(keys)) {
             if(player.state == STATE_IDLE || player.state == STATE_RUN || !isInGround){
                 if(!isInGround){
                     //Si se gira en el aire pierde el ataque
@@ -1113,13 +1162,22 @@ void main() {
         }
         if(keyA_Down) {
             if(player.state != STATE_ATACK){
-                player.state = STATE_ATACK;
+                if(isInGround){
+                    player.state = STATE_ATACK;
+                }else{
+                    //Solo puede golpear una vez en el aire
+                    if(player.airAtack == TRUE){
+                        player.state = STATE_ATACK;
+                        player.airAtack = FALSE;
+                    }
+                }
                 player.frame = 0;
             }
         }
         if(keyB_Down) {
             if(isInGround && player.state != STATE_ATACK){
                 player.velocityAsc = getStrongJump(PLAYER_JUMP INC_BITS);
+                player.airAtack = TRUE;
             }
 
         }

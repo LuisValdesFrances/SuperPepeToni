@@ -23,11 +23,11 @@ UBYTE gochiLevel_1_Y[] = {
 };
 
 UBYTE popoLevel_1_X[] = {
-    19, 66, 86, 0, 0, 0, 0, 0, 0, 0
+    66, 86, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE popoLevel_1_Y[] = {
-    30, 30, 30, 0, 0, 0, 0, 0, 0, 0
+    30, 30, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE babitLevel_1_X[] = {
