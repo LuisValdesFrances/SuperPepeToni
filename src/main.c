@@ -703,14 +703,7 @@ void moveSpritePlayer(struct Camera *camera, struct Player *player, UBYTE isInGr
     }
 }
 
-void showEnemy(
-               struct Camera *camera,
-               struct Enemy *enemyList[],
-               UBYTE maxEnemy,
-               UBYTE *listX,
-               UBYTE *listY,
-               UBYTE arraySize,
-               UBYTE enemyWidth){
+void showEnemy(struct Camera *camera, struct Enemy *enemyList[], UBYTE maxEnemy, UBYTE *listX, UBYTE *listY, UBYTE arraySize, UBYTE enemyWidth){
     UBYTE i;
     UBYTE j;
     UINT16 posX;
@@ -862,15 +855,21 @@ void main() {
     //printf("Inicio del programa");
 
     //Declaracion
+    UBYTE gameState;
+
     UBYTE frame;
     UINT16 temp;
     UBYTE count;
 
     BYTE screenCountX;
     BYTE screenCountY;
+    BYTE *pScreenCountX;
+    BYTE *pScreenCountY;
 
     UBYTE isInGround;
     UBYTE isLastInGround;
+    UBYTE *pIsInGround;
+    UBYTE *pIsLastInGround;
 
     unsigned char *map;
     UBYTE *gochiMapX;
@@ -879,8 +878,6 @@ void main() {
     UBYTE *popoMapY;
     UBYTE *babitMapX;
     UBYTE *babitMapY;
-
-
 
     UBYTE keys;
     UBYTE keyB_Up;
@@ -900,12 +897,17 @@ void main() {
     struct Player player;
     struct Camera camera;
 
+    //Asignacion
+    gameState = GAME_STATE_PLAY;
+
     keyB_Up = TRUE;
     keyB_Down = FALSE;
     keyA_Up = TRUE;
     keyA_Down = FALSE;
     isInGround = FALSE;
     isLastInGround = FALSE;
+    pIsInGround = &isInGround;
+    pIsLastInGround = &isLastInGround;
 
     //Se carga el mapa correcto
     map = &LEVEL1;
@@ -920,6 +922,8 @@ void main() {
     frame = 0;
     screenCountX = 16;
     screenCountY = 16;
+    pScreenCountX = &screenCountX;
+    pScreenCountY = &screenCountY;
 
     digitPoints[0] = 0;
     digitPoints[1] = 0;
@@ -982,7 +986,6 @@ void main() {
 
          //Incrementa temp con el tamaño X del mapa para que se cargue la proxima fila
 		temp = temp + MAP_SIZE_X;
-
     }
 
     //set_bkg_tiles(0, 0, 22, 18, &map);
@@ -1082,7 +1085,9 @@ void main() {
             }
         }
 
-        //Player controls
+
+
+
         newX = player.x;
         newY = player.y;
 
@@ -1179,7 +1184,6 @@ void main() {
                 player.velocityAsc = getStrongJump(PLAYER_JUMP INC_BITS);
                 player.airAtack = TRUE;
             }
-
         }
 
         /**
@@ -1355,6 +1359,22 @@ void main() {
     }
 
     frame++;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     }
 

@@ -10,12 +10,16 @@
 
 #define GRAVITY 6
 
+//GAME STATES
+#define GAME_STATE_MAIN_MENU 0
+#define GAME_STATE_PLAY 1
+
 //CHARACTERS
 //Por motivos de optimizacion, nunca puede ser 0
-#define MAX_GOCHI 2
+#define MAX_GOCHI 1
 #define MAX_POPO 1
 #define MAX_BABIT 1
-#define MAX_BULLET 3
+#define MAX_BULLET 1
 //Payer
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 32
