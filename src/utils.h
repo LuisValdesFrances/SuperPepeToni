@@ -11,7 +11,7 @@ UINT8 getDigit(UINT16 number, UINT8 digit);
 
 UBYTE blink01(UBYTE value);
 
-UINT16 getScrollX(UINT16 objX, UINT16 scrollX);
+UINT16 getScrollX(UINT16 objX);
 
 UINT16 getScrollY(UINT16 objY);
 

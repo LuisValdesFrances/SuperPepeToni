@@ -15,11 +15,11 @@ const UBYTE platformLevel_1_Path[] = {
 };
 
 UBYTE gochiLevel_1_X[] = {
-    25, 27, 100, 0, 0, 0, 0, 0, 0, 0
+    25, 27, 100, 110, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE gochiLevel_1_Y[] = {
-    25, 25, 28, 0, 0, 0, 0, 0, 0, 0
+    25, 25, 28, 28, 0, 0, 0, 0, 0, 0
 };
 
 UBYTE popoLevel_1_X[] = {

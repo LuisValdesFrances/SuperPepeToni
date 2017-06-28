@@ -16,19 +16,20 @@
 
 //CHARACTERS
 //Por motivos de optimizacion, nunca puede ser 0
-#define MAX_GOCHI 1
-#define MAX_POPO 1
-#define MAX_BABIT 1
+#define MAX_ENEMY 1
 #define MAX_BULLET 1
+//Enemies
+#define POPO 1
+#define GOCHI 2
+#define BABIT 3
+
 //Payer
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 32
 #define PLAYER_WEIGHT 5
 #define PLAYER_JUMP 3
 #define PLAYER_SPEED 4 INC_BITS
-//Enemies
-#define POPO 0
-#define GOCHI 1
+
 
 #define PLATFORM_WIDTH 16
 #define PLATFORM_HEIGHT 16
