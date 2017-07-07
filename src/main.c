@@ -39,7 +39,7 @@ struct Player {
 
 struct Enemy {
     UBYTE type;
-    UINT16 x;
+    UBYTE x;
     UBYTE y;
     UBYTE flip;
     UBYTE frame;
@@ -257,8 +257,14 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
 
     UBYTE temp;
     UBYTE count2;
+    UINT16 x;
+    UBYTE y;
+
+    x = (*gochi).x << 3;
+    y = (*gochi).y << 3;
+
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT)
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, x, y, GOCHI_WIDTH, GOCHI_HEIGHT)
        && (*gochi).type != 0){
         if((*gochi).expCount == 0){
             set_sprite_tile(SPRITE_ENEMY_16X24_1+temp, TILE_GOCHI_1_F1);
@@ -307,8 +313,12 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
 void moveSpriteGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count){
     UBYTE temp;
     UBYTE temp2;
+    UINT16 x;
+    UBYTE y;
+    x = (*gochi).x<<3;
+    y = (*gochi).y<<3;
     temp = count*6;//6 es el numero de sprites
-    if(isInScreen((*camera).scrollX, (*camera).scrollY, ((*gochi).x DEC_BITS), (*gochi).y, GOCHI_WIDTH, GOCHI_HEIGHT)
+    if(isInScreen((*camera).scrollX, (*camera).scrollY, x, y, GOCHI_WIDTH, GOCHI_HEIGHT)
        && (*gochi).type != 0){
 
         if((*gochi).flip){
@@ -316,12 +326,12 @@ void moveSpriteGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count){
         }else{
             temp2 = 0;
         }
-        move_sprite(SPRITE_ENEMY_16X24_1+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +8 + temp2, ((*gochi).y) - (*camera).scrollY +16);
-        move_sprite(SPRITE_ENEMY_16X24_2+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +16 - temp2, ((*gochi).y) - (*camera).scrollY +16);
-        move_sprite(SPRITE_ENEMY_16X24_3+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +8 + temp2, ((*gochi).y) - (*camera).scrollY +24);
-        move_sprite(SPRITE_ENEMY_16X24_4+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +16 - temp2, ((*gochi).y) - (*camera).scrollY +24);
-        move_sprite(SPRITE_ENEMY_16X24_5+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +8 + temp2, ((*gochi).y) - (*camera).scrollY +32);
-        move_sprite(SPRITE_ENEMY_16X24_6+temp,((*gochi).x DEC_BITS) - (*camera).scrollX +16 - temp2, ((*gochi).y) - (*camera).scrollY +32);
+        move_sprite(SPRITE_ENEMY_16X24_1+temp, x - (*camera).scrollX +8 + temp2, y - (*camera).scrollY +16);
+        move_sprite(SPRITE_ENEMY_16X24_2+temp, x - (*camera).scrollX +16 - temp2, y - (*camera).scrollY +16);
+        move_sprite(SPRITE_ENEMY_16X24_3+temp, x - (*camera).scrollX +8 + temp2, y - (*camera).scrollY +24);
+        move_sprite(SPRITE_ENEMY_16X24_4+temp, x - (*camera).scrollX +16 - temp2, y - (*camera).scrollY +24);
+        move_sprite(SPRITE_ENEMY_16X24_5+temp, x - (*camera).scrollX +8 + temp2, y - (*camera).scrollY +32);
+        move_sprite(SPRITE_ENEMY_16X24_6+temp, x - (*camera).scrollX +16 - temp2, y - (*camera).scrollY +32);
     }
 }
 
@@ -800,13 +810,13 @@ UBYTE spawnEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE *listX, UBYTE
             if(listX[i] != 0){
                 //Saco bicho
                 if((*camera).scrollX + SCREEN_WIDTH + enemyW >= (listX[i]<<3)){
-                    listX[i] = 0;
                     (*enemy).type = enemyType;
-                    (*enemy).x = (listX[i]<<3) INC_BITS;
-                    (*enemy).y = (listY[i]<<3);
+                    (*enemy).x = listX[i];//Tile donse se spawnea
+                    (*enemy).y = listY[i];//Tile donse se spawnea
                     (*enemy).frame = 0;
                     (*enemy).flip = FALSE;
                     (*enemy).expCount = 0;
+                    listX[i] = 0;
                     return TRUE;
                 }
             }
@@ -818,6 +828,9 @@ UBYTE spawnEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE *listX, UBYTE
 void destroyEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyType){
 
     UBYTE enemyW;
+    UINT16 x;
+
+    x = (*enemy).x << 3;
 
     if((*enemy).type != 0){
         if(enemyType == POPO){
@@ -831,7 +844,7 @@ void destroyEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyType){
         }
 
         //Elimino el bicho
-       if((*camera).scrollX > (*enemy).x + enemyW){
+       if((*camera).scrollX > x + enemyW){
             (*enemy).type = 0;
         }
     }
@@ -954,6 +967,7 @@ void main() {
 
     //Declaracion
     UBYTE gameState;
+    UBYTE tileX;
 
     UBYTE frame;
     UINT16 temp;
@@ -966,12 +980,12 @@ void main() {
     UBYTE isLastInGround;
 
     unsigned char *map;
-    UBYTE *gochiMapX;
-    UBYTE *gochiMapY;
-    UBYTE *popoMapX;
-    UBYTE *popoMapY;
-    UBYTE *babitMapX;
-    UBYTE *babitMapY;
+    UBYTE gochiMapX;
+    UBYTE gochiMapY;
+    UBYTE popoMapX;
+    UBYTE popoMapY;
+    UBYTE babitMapX;
+    UBYTE babitMapY;
 
     UBYTE keys;
     UBYTE keyB_Up;
@@ -1008,6 +1022,7 @@ void main() {
     babitMapX = &babitLevel_1_X;
     babitMapY = &babitLevel_1_Y;
 
+    tileX = 20;
     temp = 0;
     frame = 0;
     screenCountX = 16;
@@ -1296,6 +1311,7 @@ void main() {
         /**
         Logica enemigos
         */
+        /*
         count = MAX_ENEMY-1;
         do{
             moveEnemy(&camera, &enemyList[count], map);
@@ -1304,6 +1320,7 @@ void main() {
                 checkPlayerDamage(&camera, &player, &enemyList[count]);
             }
         }while(count--);
+        */
         //Bullet
         count = MAX_BULLET-1;
         do{
@@ -1350,6 +1367,11 @@ void main() {
         camera.scrollY = getScrollY(player.y);
         screenCountY += (camera.scrollY-camera.lastY);
 
+        temp = (20 + (camera.scrollX >> 3));
+        if(tileX < temp){
+            tileX = temp;
+        }
+
         /**
         Pintado enemigos
         */
@@ -1378,6 +1400,7 @@ void main() {
         //scroll_bkg(camera.scroll, 0);//Es automatico
         //Al avanzar un tile se actualiza el mapa
         if(screenCountX >= 24){
+
             screenCountX = (16 + (screenCountX - 24));
 
             count = MAX_ENEMY-1;
@@ -1427,7 +1450,7 @@ void main() {
         //Solo refresco cada 30 frames
         //move_win(0, 136);
         if(frame%10 == 0){
-            drawPoints(screenCountX, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
+            drawPoints(tileX, 5, SCREEN_WIDTH - (8*4), 16);//hasta 256
         }
 
         frame++;
