@@ -15,15 +15,15 @@ extern const unsigned char FONT_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char MAP_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char SPRITE_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char LEVEL1[];//Colisiones y distribucion
-extern unsigned UBYTE platformLevel_1_X[];//Posiciones de los malos
-extern unsigned UBYTE platformLevel_1_Y[];//Posiciones de los malos
-extern unsigned UBYTE platformLevel_1_Path[];//Posiciones de los malos
-extern unsigned UBYTE gochiLevel_1_X[];//Posiciones de los malos
-extern unsigned UBYTE gochiLevel_1_Y[];//Posiciones de los malos
-extern unsigned UBYTE popoLevel_1_X[];//Posiciones de los malos
-extern unsigned UBYTE popoLevel_1_Y[];//Posiciones de los malos
-extern unsigned UBYTE babitLevel_1_X[];//Posiciones de los malos
-extern unsigned UBYTE babitLevel_1_Y[];//Posiciones de los malos
+extern const UBYTE platformLevel_1_X[];//Posiciones de los malos
+extern const UBYTE platformLevel_1_Y[];//Posiciones de los malos
+extern const UBYTE platformLevel_1_Path[];//Posiciones de los malos
+extern const UBYTE gochiLevel_1_X[];//Posiciones de los malos
+extern const UBYTE gochiLevel_1_Y[];//Posiciones de los malos
+extern const UBYTE popoLevel_1_X[];//Posiciones de los malos
+extern const UBYTE popoLevel_1_Y[];//Posiciones de los malos
+extern const UBYTE babitLevel_1_X[];//Posiciones de los malos
+extern const UBYTE babitLevel_1_Y[];//Posiciones de los malos
 
 struct Player {
     UINT16 x;
@@ -260,8 +260,10 @@ void drawGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count, UBYTE fr
     UINT16 x;
     UBYTE y;
 
-    x = (*gochi).x << 3;
-    y = (*gochi).y << 3;
+    x = (*gochi).x;
+    y = (*gochi).y;
+    x = x<<3;
+    y = y<<3;
 
     temp = count*6;//6 es el numero de sprites
     if(isInScreen((*camera).scrollX, (*camera).scrollY, x, y, GOCHI_WIDTH, GOCHI_HEIGHT)
@@ -315,8 +317,10 @@ void moveSpriteGochi(struct Camera *camera, struct Enemy *gochi, UBYTE count){
     UBYTE temp2;
     UINT16 x;
     UBYTE y;
-    x = (*gochi).x<<3;
-    y = (*gochi).y<<3;
+    x = (*gochi).x;
+    y = (*gochi).y;
+    x = x<<3;
+    y = y<<3;
     temp = count*6;//6 es el numero de sprites
     if(isInScreen((*camera).scrollX, (*camera).scrollY, x, y, GOCHI_WIDTH, GOCHI_HEIGHT)
        && (*gochi).type != 0){
@@ -794,6 +798,7 @@ UBYTE spawnEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE *listX, UBYTE
 
     UBYTE i;
     UBYTE enemyW;
+    UINT16 pos;
 
     if((*enemy).type == 0){
 
@@ -806,11 +811,14 @@ UBYTE spawnEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE *listX, UBYTE
         else if(enemyType == BABIT){
             enemyW = BABIT_WIDTH;
         }
+
         for(i = 0; i < arraySize; i++){
             if(listX[i] != 0){
                 //Saco bicho
-                if((*camera).scrollX + SCREEN_WIDTH + enemyW >= (listX[i]<<3)){
-                    (*enemy).type = enemyType;
+            	pos = listX[i];
+            	pos = pos<<3;
+                if((*camera).scrollX + SCREEN_WIDTH + enemyW >= pos){
+                	(*enemy).type = enemyType;
                     (*enemy).x = listX[i];//Tile donse se spawnea
                     (*enemy).y = listY[i];//Tile donse se spawnea
                     (*enemy).frame = 0;
@@ -980,12 +988,13 @@ void main() {
     UBYTE isLastInGround;
 
     unsigned char *map;
-    UBYTE gochiMapX;
-    UBYTE gochiMapY;
-    UBYTE popoMapX;
-    UBYTE popoMapY;
-    UBYTE babitMapX;
-    UBYTE babitMapY;
+
+
+
+    UBYTE *popoMapX;
+    UBYTE *popoMapY;
+    UBYTE *babitMapX;
+    UBYTE *babitMapY;
 
     UBYTE keys;
     UBYTE keyB_Up;
@@ -997,6 +1006,8 @@ void main() {
     UBYTE newY;
 
     char digitPoints[5];
+    UBYTE gochiPositionXList[NUMBER_ENEMY_MAP];
+    UBYTE gochiPositionYList[NUMBER_ENEMY_MAP];
     struct Platform platformList[NUMBER_PLATFORM_MAP];
     struct Enemy enemyList[MAX_ENEMY];
     struct Bullet bulletList[MAX_BULLET];
@@ -1015,12 +1026,12 @@ void main() {
 
     //Se carga el mapa correcto
     map = &LEVEL1;
-    gochiMapX = &gochiLevel_1_X;
-    gochiMapY = &gochiLevel_1_Y;
-    popoMapX = &popoLevel_1_X;
-    popoMapY = &popoLevel_1_Y;
-    babitMapX = &babitLevel_1_X;
-    babitMapY = &babitLevel_1_Y;
+    //gochiMapX = gochiLevel_1_X;
+    //gochiMapY = gochiLevel_1_Y;
+    popoMapX = popoLevel_1_X;
+    popoMapY = popoLevel_1_Y;
+    babitMapX = babitLevel_1_X;
+    babitMapY = babitLevel_1_Y;
 
     tileX = 20;
     temp = 0;
@@ -1110,25 +1121,26 @@ void main() {
     player.state = STATE_IDLE;
     player.suffCount = 0;
 
-    count = NUMBER_PLATFORM_MAP-1;
-    do{
-        platformList[count].x = platformLevel_1_X[count];
-        platformList[count].y = platformLevel_1_Y[count] << 3;
-        platformList[count].path = platformLevel_1_Path[count];
-    }
-    while(count--);
 
-    count = MAX_ENEMY-1;
-    do{
+    for(count = 0; count < NUMBER_ENEMY_MAP; count++){
+    	gochiPositionXList[count] = gochiLevel_1_X[count];
+    	gochiPositionYList[count] = gochiLevel_1_Y[count];
+    }
+    for(count = 0; count < NUMBER_PLATFORM_MAP; count++){
+    	 platformList[count].x = platformLevel_1_X[count];
+    	 platformList[count].y = platformLevel_1_Y[count] << 3;
+    	 platformList[count].path = platformLevel_1_Path[count];
+    }
+    for(count = 0; count < MAX_ENEMY; count++){
         enemyList[count].type = 0;
     }
-    while(count--);
 
     count = MAX_ENEMY-1;
     do{
-
-        //spawnEnemy(&camera, &enemyList[count], popoMapX, popoMapY, NUMBER_ENEMY_MAP, POPO);
-        spawnEnemy(&camera, &enemyList[count], gochiMapX, gochiMapY, NUMBER_ENEMY_MAP, GOCHI);
+    	//spawnEnemy(&camera, &enemyList[count], popoMapX, popoMapY, NUMBER_ENEMY_MAP, POPO);
+        spawnEnemy(&camera, &enemyList[count],
+        		gochiPositionXList, gochiPositionYList,
+        		NUMBER_ENEMY_MAP, GOCHI);
         //spawnEnemy(&camera, &enemyList[count], babitMapX, babitMapY, NUMBER_ENEMY_MAP, BABIT);
 
     }
@@ -1408,7 +1420,9 @@ void main() {
                 //if(e->type == 0){//No esta ocupado
 
                 //spawnEnemy(&camera, &enemyList[count], popoMapX, popoMapY, NUMBER_ENEMY_MAP, POPO);
-                spawnEnemy(&camera, &enemyList[count], gochiMapX, gochiMapY, NUMBER_ENEMY_MAP, GOCHI);
+                spawnEnemy(&camera, &enemyList[count],
+                		gochiPositionXList, gochiPositionYList,
+                		NUMBER_ENEMY_MAP, GOCHI);
                 //spawnEnemy(&camera, &enemyList[count], babitMapX, babitMapY, NUMBER_ENEMY_MAP, BABIT);
 
                 //destroyEnemy(&camera, &enemyList[count], POPO);
@@ -1427,7 +1441,7 @@ void main() {
                 //if(e->type == 0){//No esta ocupado
                 if(enemyList[count].expCount == 5){
                     spawnEnemy(&camera, &enemyList[count], popoMapX, popoMapY, NUMBER_ENEMY_MAP, POPO);
-                    spawnEnemy(&camera, &enemyList[count], gochiMapX, gochiMapY, NUMBER_ENEMY_MAP, GOCHI);
+                    spawnEnemy(&camera, &enemyList[count], gochiPositionXList, gochiPositionYList, NUMBER_ENEMY_MAP, GOCHI);
                     spawnEnemy(&camera, &enemyList[count], babitMapX, babitMapY, NUMBER_ENEMY_MAP, BABIT);
                 }
             }

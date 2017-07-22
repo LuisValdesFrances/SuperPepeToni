@@ -16,7 +16,7 @@
 
 //CHARACTERS
 //Por motivos de optimizacion, nunca puede ser 0
-#define MAX_ENEMY 1
+#define MAX_ENEMY 3
 #define MAX_BULLET 1
 //Enemies
 #define POPO 1
