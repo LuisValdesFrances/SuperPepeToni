@@ -174,14 +174,14 @@ void moveEnemy(struct Camera *camera, struct Enemy *enemy, UBYTE enemyW, UBYTE e
             (*enemy).x = newX;
 
         }
-        /*
+
         else{
             //Si se ha quedado a la izquierda fuera del scroll, lo desactivo
             if(((*enemy).x DEC_BITS) + enemyW < (*camera).scrollX){
                 (*enemy).expCount = 4;
             }
         }
-        */
+
     }
 }
 
