@@ -47,7 +47,7 @@ UINT16 isCollisionDown(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX, 
         (Matriz de dos dimensiones donde cada posicion equivale a la informacion en 8 pixeles)
         */
         indX = (x + offsetX) / 8;
-        indY = (y + h) / 8;
+        indY = (y + h -1) / 8;
         //Convierte los index x/y en xy
         indXY = (indY * mapSizeX) + indX;
 
@@ -110,7 +110,7 @@ UINT16 isCollisionRight(UINT16 x, UINT16 y, UINT16 w, UINT16 h, UINT16 mapSizeX,
         }
         i++;
         //Convierte la posicion del player en index x/y
-        indX = (x + w) / 8;
+        indX = (x + w-1) / 8;
         indY = (y + offsetY) / 8;
         //Convierte los index x/y en xy
         indXY = (indY * mapSizeX) + indX;
@@ -140,7 +140,7 @@ UINT16 isCollisionLeft(UINT16 x, UINT16 y, UINT16 h, UINT16 mapSizeX, unsigned c
         i++;
         //Convierte la posicion del player en index x/y
         indX = x /8;
-        indY = (y + offsetY) / 8;
+         indY = (y + offsetY) / 8;
         //Convierte los index x/y en xy
         indXY = (indY * mapSizeX) + indX;
 

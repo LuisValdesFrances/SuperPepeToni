@@ -66,7 +66,10 @@ UBYTE blink01(UBYTE value){
 UINT16 getScrollX(UINT16 objX) {
     UINT16 scX;
     scX = 0;
-    //La camara se mueve cuando se pasa de la mitad de la pantalla
+    /*
+    La camara se mueve cuando se pasa de la mitad de la pantalla
+    La segunda condicion evita que se mueva hacia la izquierda
+    */
     if(objX > SCREEN_WIDTH4){
         scX = objX - SCREEN_WIDTH4;
     }
