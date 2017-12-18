@@ -63,7 +63,7 @@ UBYTE blink01(UBYTE value){
     }
 }
 
-UINT16 getScrollX(UINT16 objX, UINT16 scrollX) {
+UINT16 getScrollX(UINT16 objX) {
     UINT16 scX;
     scX = 0;
     /*

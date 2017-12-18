@@ -11,10 +11,13 @@
 #include "utils.h"
 #include "text.h"
 
-extern const unsigned char FONT_TILES[];//Informacion de los tiles (imagenes)
+//extern const unsigned char FONT_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char MAP_TILES[];//Informacion de los tiles (imagenes)
 extern const unsigned char SPRITE_TILES[];//Informacion de los tiles (imagenes)
+
 extern const unsigned char LEVEL1[];//Colisiones y distribucion
+extern const unsigned char LEVEL2[];//Colisiones y distribucion
+extern const unsigned char LEVEL3[];//Colisiones y distribucion
 extern unsigned UBYTE platformLevel_1_X[];//Posiciones de los malos
 extern unsigned UBYTE platformLevel_1_Y[];//Posiciones de los malos
 extern unsigned UBYTE platformLevel_1_Path[];//Posiciones de los malos
@@ -737,7 +740,6 @@ void showEnemy(struct Camera *camera, struct Enemy *enemyList[], UBYTE maxEnemy,
     }
 }
 
-
 void drawBGXRight(struct Camera *camera, unsigned char *map){
 
     UINT16 tileX;
@@ -756,7 +758,6 @@ void drawBGXRight(struct Camera *camera, unsigned char *map){
     //Es el motivo de porque si el personaje esta enla posicion 257, se tilea a partir de la posición 0
 
     tileXMod = tileX%32;
-
     //18 son los tiles que entran en la pantalla en alto
     for(count = 0; count != 32; count++ ){
         //Solo relleno el ultimo tile por la derecha
@@ -796,15 +797,14 @@ void drawBGXLeft(struct Camera *camera, unsigned char *map){
 
     tileX = ((*camera).scrollX>>3)-1;
     tileXMod = tileX%32;
-
     for(count = 0; count != 32; count++ ){
         set_bkg_tiles(tileXMod, count, 1, 1, &(map+tileX));
         tileX = tileX + MAP_SIZE_X;
     }
 }
 
+/*
 void drawBGYDown(struct Camera *camera, unsigned char *map){
-    /*
     UINT16 count;
     UINT16 tileY;
     UINT16 indXY;
@@ -822,11 +822,11 @@ void drawBGYDown(struct Camera *camera, unsigned char *map){
         //Incrementa con con el tamaño de X para que se cargue la proxima fila
         indXY = indXY + 1;
     }
-    */
 }
+*/
 
+/*
 void drawBGYUp(struct Camera *camera, unsigned char *map){
-    /*
     UINT16 count;
     UINT16 tileY;
     UINT16 indXY;
@@ -844,8 +844,8 @@ void drawBGYUp(struct Camera *camera, unsigned char *map){
         //Incrementa con con el tamaño de X para que se cargue la proxima fila
         indXY = indXY + 1;
     }
-    */
 }
+*/
 
 
 void main() {
@@ -897,6 +897,19 @@ void main() {
     struct Player player;
     struct Camera camera;
 
+
+    SPRITES_8x8;
+    //Carga en la VRAM los tiles para los sprites y fondo
+    //posicion inicial, numero y tiles
+
+    SWITCH_ROM_MBC1(2);//Salto al banco de memoria 2
+    //posicion de memoria, cantidad de tiles, tiles
+    //set_bkg_data(FONT_OFFSET, 64,(unsigned char *)FONT_TILES);
+    set_sprite_data(0, TOTAL_TILES, (unsigned char *)SPRITE_TILES);
+    set_bkg_data(0, TOTAL_MAP_TILES, (unsigned char *)MAP_TILES);
+
+    //SWITCH_ROM_MBC1(1);
+
     //Asignacion
     gameState = GAME_STATE_PLAY;
 
@@ -931,25 +944,19 @@ void main() {
     digitPoints[3] = 0;
     digitPoints[4] = 0;
 
+
+    /*
     DISPLAY_OFF;//Desactiva la pantalla
     disable_interrupts();
     HIDE_SPRITES;
     HIDE_BKG;
     HIDE_WIN;
-
-    //Tiles del fondo/fuente
-    SWITCH_ROM_MBC1(2);//Banco de memoria 2
-    //posicion inicial, numero y tiles
-    set_bkg_data(FONT_OFFSET, 64,(unsigned char *)FONT_TILES);
-    set_bkg_data(0, TOTAL_MAP_TILES, (unsigned char *)MAP_TILES);
+    */
 
 
-    //Sprites
-    //Carga en la VRAM los tiles para los sprites
-    SPRITES_8x8;
-    SWITCH_ROM_MBC1(2);//Salto al banco de memoria 2
-    //posicion de memoria, cantidad de tiles, tiles
-    set_sprite_data(0, TOTAL_TILES, (unsigned char *)SPRITE_TILES);
+
+
+
     //Asigna a un sprite un tile
     //numero del sprite (0-39), posicion del tile
     set_sprite_tile(SPRITE_DIGIT_1, TILE_0);
@@ -968,9 +975,6 @@ void main() {
     Al final de cada iteracion mueve el puntero 64 tiles (El tamaño en X del mapa)
     para que en la siguiente iteracion apunte a la nueva fila de la matriz
     */
-
-    SWITCH_ROM_MBC1(2);//Banco de memoria 4
-
 
     /**
     Relleneo de tiles desde la parte superior izquierda la pantalla de tiles, todos los
@@ -1042,7 +1046,7 @@ void main() {
     drawString("POINTS WI ", 1, 0, 1);
     drawString("POINTS BG ", 1, 0, 0);
 
-    while(TRUE) {
+     while(TRUE) {
 
         /**
         Gestion del game pad
@@ -1276,7 +1280,7 @@ void main() {
         */
         //Actualizo los valores de la camara
         camera.lastX = camera.scrollX;
-        camera.scrollX = getScrollX(player.x DEC_BITS, camera.scrollX);
+        camera.scrollX = getScrollX(player.x DEC_BITS);
         screenCountX += (camera.scrollX-camera.lastX);
         //
         camera.lastY = camera.scrollY;
